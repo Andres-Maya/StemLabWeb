@@ -126,6 +126,31 @@ npm run dev                                              # en otra: http://local
 
 Vite recarga la página al guardar y reenvía `/api` al servidor de Python.
 
+### Desplegar en Vercel
+
+Vercel sirve solo la web (Demucs y PyTorch no caben en sus funciones). La separación la hace el servidor de Python en
+otro sitio, y la web se conecta a él:
+
+| Campo en Vercel | Valor |
+|---|---|
+| Framework Preset | Vite |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+| Node.js Version | 22.x |
+| Variable `VITE_SEPARATION_URL` (opcional) | dirección pública del servidor de separación, p. ej. `https://separacion.midominio.com` |
+
+`vercel.json` ya añade las cabeceras de aislamiento de origen. Dónde puede estar el servidor de separación:
+
+- **En tu equipo**: arranca `python server/stemlab_server.py` y en la web elige **IA → Servidor de separación… → Usar
+  este equipo (localhost:8000)**. La dirección se recuerda en ese navegador. La primera vez, Chrome o Edge pueden pedir
+  permiso para acceder a la red local.
+- **En un servidor propio** (VPS, Render, Railway, Fly.io…; conviene 4 GB de RAM o más, y GPU para que sea rápido):
+  `python server/stemlab_server.py --host 0.0.0.0 --allow-origin https://tu-web.vercel.app`, detrás de HTTPS (una web
+  HTTPS no puede usar un servidor HTTP que no sea `localhost`). Su dirección va en `VITE_SEPARATION_URL` o en **IA →
+  Servidor de separación…**. El puerto se toma de `--port` o de la variable `PORT`.
+
+La API admite peticiones de otros orígenes (CORS); `--allow-origin` (se puede repetir) la limita a tus webs.
+
 Navegadores: Chrome, Edge, Firefox o Safari recientes (AudioWorklet). Elegir la salida de audio solo es posible en
 los navegadores basados en Chromium (Chrome, Edge); en el resto se usa la del sistema.
 
