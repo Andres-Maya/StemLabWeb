@@ -11,6 +11,7 @@
     proyecto, IA). No contiene lógica de audio.
 */
 import { MODELS, SeparationManager, type SeparationResult } from './ai/separator.ts';
+import { getSeparationServer, isLocalPage } from './ai/serverConfig.ts';
 import { decodeAudio, isAudioFile, sourceBlob, sourceFileName } from './audio/decode.ts';
 import { AudioEngine } from './audio/engine.ts';
 import { formatTime, stemDisplayName } from './core/strings.ts';
@@ -24,6 +25,7 @@ import { trackColourFor, type Colour } from './ui/colour.ts';
 import { isDialogOpen, openDialog, showConfirm, showMessage } from './ui/dialogs.ts';
 import { h, isEditingText } from './ui/dom.ts';
 import { ProgressDialog, showExportDialog, type ExportScope } from './ui/exportDialog.ts';
+import { showSeparationServerDialog } from './ui/serverDialog.ts';
 import { header, item, MenuBar, separator, showMenu, type MenuEntry } from './ui/menu.ts';
 import { MixerView } from './ui/mixerView.ts';
 import { SeparationScreen, SeparationView } from './ui/separationScreen.ts';
@@ -216,6 +218,8 @@ export class App {
           item('Mostrar progreso de la separación', () => this.showSeparationWindow(),
                { enabled: aiBusy && this.folderViews.has(this.separatingFolderId) }),
           item('Cancelar separación', () => this.ai.cancel(), { enabled: aiBusy }),
+          separator(),
+          item('Servidor de separación...', () => void this.configureServer(), { enabled: !aiBusy }),
           separator(),
           header('Modelo'),
           ...MODELS.map(model => item(model.id + '  -  ' + model.description, () => {
@@ -858,6 +862,14 @@ export class App {
       return;
     }
 
+    // Web desplegada sin servidor de separación (Vercel...): primero hay que
+    // decir dónde está (en este equipo o en otro servidor).
+    if (getSeparationServer() === '' && !isLocalPage() && !await showSeparationServerDialog(m => this.statusBar.setMessage(m)))
+      return;
+
+    if (this.ai.isBusy() || !this.projects.tracks.includes(source) || !source.hasClips())
+      return;
+
     // Se envía el audio del primer fragmento de la pista (el archivo entero).
     const firstClip = source.getClips()[0];
     const blob = sourceBlob(firstClip.source);
@@ -886,6 +898,10 @@ export class App {
     view.getProgress = () => this.ai.getProgress();
     view.getStatus = () => this.ai.getStatus();
     this.screen.present(folderId, view);
+  }
+
+  private async configureServer(): Promise<void> {
+    await showSeparationServerDialog(message => this.statusBar.setMessage(message));
   }
 
   private showSeparationWindow(): void {
@@ -1000,7 +1016,16 @@ export class App {
 
     if (!result.ok) {
       this.updateFolders();
-      void showMessage('Error en la separación', result.error);
+      this.statusBar.setMessage('La separación no se pudo hacer.');
+
+      if (result.serverUnavailable === true) {
+        openDialog('Error en la separación', result.error,
+                   [{ label: 'Cerrar', value: 0 }, { label: 'Servidor de separación...', value: 1, primary: true }],
+                   value => { if (value === 1) void this.configureServer(); }, { icon: 'warning' });
+      } else {
+        void showMessage('Error en la separación', result.error);
+      }
+
       return;
     }
 
