@@ -1,0 +1,17 @@
+# Dependencias y compilación
+node_modules/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Editores y herramientas locales
+.claude/
+.vscode/
+.vs/
+
+# Sistema
+.DS_Store
+Thumbs.db
