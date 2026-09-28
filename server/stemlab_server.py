@@ -16,6 +16,11 @@ mezclas viven solo en el navegador y se descargan desde allí.
     python server/stemlab_server.py                   # http://127.0.0.1:8000
     python server/stemlab_server.py --port 9000 --host 0.0.0.0
 
+La web también puede estar en otro sitio (por ejemplo, desplegada en Vercel) y
+usar este servidor solo para separar: escribe su dirección en StemLab Web, en
+IA > Servidor de separación. La API admite peticiones de cualquier origen
+(CORS); --allow-origin la limita a una web concreta.
+
 API (JSON):
     GET    /api/health                         modelos y estado del entorno
     POST   /api/separations?model=M&name=N     cuerpo = el archivo de audio -> {"id": ...}
@@ -271,6 +276,7 @@ class Separations:
 class Handler(BaseHTTPRequestHandler):
     server_version = "StemLabWeb/0.1"
     separations: Separations
+    allowed_origins: list[str] = ["*"]      # webs que pueden usar la API desde otro origen (CORS)
 
     def log_message(self, format: str, *args) -> None:  # noqa: A002 - firma de la clase base
         if not self.path.startswith("/api/separations/") or "/events" not in self.path:
@@ -283,10 +289,35 @@ class Handler(BaseHTTPRequestHandler):
         if length is not None:
             self.send_header("Content-Length", str(length))
 
-        for key, value in {**ISOLATION_HEADERS, **(extra or {})}.items():
+        headers = {**ISOLATION_HEADERS, **(extra or {})}
+
+        if self.path.startswith("/api/"):
+            headers.update(self._cors_headers())
+
+        for key, value in headers.items():
             self.send_header(key, value)
 
         self.end_headers()
+
+    def _cors_headers(self) -> dict:
+        """La web puede estar en otro origen (Vercel, otro puerto...): se le
+        permite usar la API. También desde una web pública hacia este equipo
+        (Private Network Access de Chrome)."""
+        origin = self.headers.get("Origin", "")
+        allowed = "*" in self.allowed_origins or origin in self.allowed_origins
+
+        if not origin or not allowed:
+            return {"Cross-Origin-Resource-Policy": "cross-origin"}
+
+        return {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, HEAD, POST, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Private-Network": "true",
+            "Access-Control-Max-Age": "600",
+            "Cross-Origin-Resource-Policy": "cross-origin",
+            "Vary": "Origin",
+        }
 
     def _json(self, status: int, data: dict) -> None:
         body = json.dumps(data, ensure_ascii=False).encode("utf-8")
@@ -400,6 +431,10 @@ class Handler(BaseHTTPRequestHandler):
                       {"Cache-Control": cache})
         self.wfile.write(data)
 
+    def do_OPTIONS(self) -> None:  # noqa: N802
+        """Petición previa del navegador (CORS) antes de subir la canción desde otra web."""
+        self._headers(HTTPStatus.NO_CONTENT, "text/plain", 0)
+
     def do_HEAD(self) -> None:  # noqa: N802
         """¿Sigue existiendo la separación? (el navegador lo pregunta si pierde los eventos)."""
         parts, _ = self._route()
@@ -465,20 +500,26 @@ def find_python() -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Servidor de StemLab Web (aplicación + separación con Demucs).")
     parser.add_argument("--host", default="127.0.0.1", help="0.0.0.0 para abrirlo a la red local")
-    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8000")),
+                        help="puerto (por defecto, la variable PORT o 8000)")
     parser.add_argument("--python", default=find_python(), help="Python con Demucs instalado")
+    parser.add_argument("--allow-origin", action="append", default=None, metavar="URL",
+                        help="web que puede usar la API desde otro origen, p. ej. https://stemlab.vercel.app "
+                             "(se puede repetir; por defecto, cualquiera)")
     args = parser.parse_args()
 
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
     Handler.separations = Separations(args.python)
+    Handler.allowed_origins = [o.rstrip("/") for o in args.allow_origin] if args.allow_origin else ["*"]
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     server.daemon_threads = True
 
     shown = "localhost" if args.host in ("127.0.0.1", "0.0.0.0") else args.host
     print(f"StemLab Web en http://{shown}:{args.port}")
     print(f"Separación con: {args.python}")
+    print("Webs que pueden usarlo: " + ("cualquiera" if "*" in Handler.allowed_origins else ", ".join(Handler.allowed_origins)))
     print(f"Archivos temporales: {Handler.separations.root} (se borran solos)")
 
     if not DIST.is_dir():
