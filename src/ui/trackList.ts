@@ -168,7 +168,7 @@ export class TrackList {
     this.projects = projects;
 
     this.emptyHint.textContent = 'Pulsa + para añadir una pista, arrastra aquí una canción o usa Archivo > Importar audio...\n'
-                               + 'Después, IA > Separar instrumentos. Para grabar, pulsa R.';
+                               + 'Después, IA > Separar instrumentos. Para grabar, añade una pista y pulsa R.';
     this.emptyAddButton.element.style.top = '6px';
     this.emptyAddButton.onClick = () => this.onAddTrack(-1, '');
     this.addBelowButton.onClick = () => {

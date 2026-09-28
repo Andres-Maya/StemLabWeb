@@ -167,7 +167,7 @@ los navegadores basados en Chromium (Chrome, Edge); en el resto se usa la del si
    - El botón **Ondas** de la carpeta abre y cierra esa pantalla mientras exista alguna pista de la separación. Si eliminas una pista, su onda desaparece; si lo deshaces, vuelve.
    - Modelo, en el mismo menú: `htdemucs` (4 pistas), `htdemucs_ft` (4 pistas, más calidad y más lento), `htdemucs_6s` (6 pistas, añade guitarra y piano).
 3. Cada pista tiene Mute, Solo, volumen y paneo. Al seleccionarla, el mezclador muestra su canal y su cadena de efectos.
-4. **Grabar:** selecciona una pista y pulsa ⏺ o **R**. Sin pista seleccionada se crea una nueva. La primera vez el navegador pide permiso para el micrófono.
+4. **Grabar:** selecciona una pista y pulsa ⏺ o **R**. Si no hay ninguna pista no se graba nada (ni corre el cabezal): StemLab ofrece añadir una, y la grabación empieza al pulsar **R** sobre ella. La primera vez el navegador pide permiso para el micrófono.
    - La toma empieza en el cabezal; si hay audio ahí, justo después. En una pista los fragmentos **nunca se solapan**: para grabar encima, usa otra pista (**+** o **T**).
    - Pausar (**R** o Espacio) y volver a pulsar **R** sigue grabando en la misma pista. Mientras se graba, el cabezal no se mueve.
    - **Entrada** (barra superior): ganancia del micrófono, +18 dB por defecto, con su medidor y un limitador suave. La grabación se compensa por la latencia del dispositivo.

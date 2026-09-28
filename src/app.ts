@@ -793,14 +793,13 @@ export class App {
     if (this.recordingStarting)
       return;
 
-    // Se graba en la pista seleccionada. Si no hay ninguna, se crea una nueva
-    // y queda seleccionada, así el siguiente R sigue grabando en ella.
-    let target = this.trackList.getSelectedTrack();
+    // Se graba en la pista seleccionada. Sin pistas no se arranca nada (ni la
+    // grabación ni el cabezal): primero hay que añadir una.
+    const target = this.trackList.getSelectedTrack();
 
     if (target === null) {
-      target = this.projects.addEmptyTrack('Grabación');
-      this.trackList.refresh();
-      this.trackList.selectTrack(target);
+      this.askToAddTrackForRecording();
+      return;
     }
 
     // En una pista los fragmentos no se solapan: si el cabezal está sobre
@@ -829,6 +828,23 @@ export class App {
     this.statusBar.setMessage(`Grabando en "${target.name}"`
       + (start !== playhead ? ` a continuación del audio que ya tiene, desde ${formatTime(start / rate)}` : '')
       + '... pulsa R para pausar y R para seguir en la misma pista.');
+  }
+
+  private askToAddTrackForRecording(): void {
+    const noTracks = this.projects.tracks.length === 0;
+    this.statusBar.setMessage(noTracks ? 'No hay ninguna pista: añade una (+ o T) y pulsa R para grabar en ella.'
+                                       : 'Selecciona la pista en la que quieres grabar (clic en ella) y pulsa R.');
+
+    if (!noTracks)
+      return;
+
+    openDialog('Grabar', 'No hay ninguna pista donde grabar.\n\nAñade una pista (con + o la tecla T), '
+                         + 'déjala seleccionada y pulsa R o el botón rojo para empezar a grabar en ella.',
+               [{ label: 'Cancelar', value: 0 }, { label: 'Añadir pista', value: 1, primary: true }],
+               value => {
+                 if (value === 1)
+                   this.addTrack();
+               }, { icon: 'info' });
   }
 
   private finishRecording(): void {
