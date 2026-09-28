@@ -774,6 +774,12 @@ export class App {
       return;
     }
 
+    // Sin audio no hay nada que reproducir: el cabezal no se mueve.
+    if (!this.engine.isPlaying() && this.projects.getContentLength() <= 0) {
+      this.statusBar.setMessage('No hay nada que reproducir: importa una canción o graba en una pista.');
+      return;
+    }
+
     this.engine.togglePlayPause();
   }
 

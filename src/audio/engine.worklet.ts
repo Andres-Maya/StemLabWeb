@@ -238,10 +238,11 @@ class StemLabProcessor extends AudioWorkletProcessor {
     if (playing) {
       this.position += n;
 
-      // Fin de la canción: parar y volver al inicio (salvo si se está grabando).
+      // Fin de la canción, o no hay nada que sonar: parar y volver al inicio
+      // (salvo si se está grabando: la toma alarga la canción).
       const end = this.core.contentLength;
 
-      if (!this.recording && end > 0 && blockStart + n >= end) {
+      if (!this.recording && blockStart + n >= end) {
         this.playing = false;
         this.position = 0;
       }
