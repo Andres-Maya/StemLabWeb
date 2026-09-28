@@ -8,6 +8,7 @@
     terminar.
 */
 import { stemSortOrder } from '../core/strings.ts';
+import { apiUrl, getSeparationServer, isLocalPage } from './serverConfig.ts';
 
 export interface ModelInfo {
   id: string;
@@ -32,6 +33,8 @@ export interface SeparationResult {
   cancelled: boolean;
   error: string;
   stems: Stem[];
+  /** No se pudo conectar con el servidor (hay que arrancarlo o cambiar su dirección). */
+  serverUnavailable?: boolean;
 }
 
 type ServerEvent =
@@ -41,10 +44,20 @@ type ServerEvent =
   | { type: 'error'; message: string }
   | { type: 'cancelled' };
 
-const serverHelp = 'No se pudo conectar con el servidor de separación.\n\n'
-  + 'La separación por IA la hace Demucs en el servidor de StemLab Web. Ponlo en marcha con:\n\n'
-  + '    python server/stemlab_server.py\n\n'
-  + '(con el Python que tiene Demucs instalado; ver README.md).';
+/** Qué hacer cuando no se puede conectar con el servidor de separación. */
+export function serverHelp(server = getSeparationServer()): string {
+  const start = 'La separación por IA la hace Demucs (Python + PyTorch) en el servidor de StemLab Web, '
+              + 'que no puede ejecutarse dentro del navegador ni en Vercel. Ponlo en marcha con el Python '
+              + 'que tiene Demucs instalado:\n\n    python server/stemlab_server.py';
+
+  if (server === '' && !isLocalPage())
+    return 'Esta web no tiene un servidor de separación configurado.\n\n' + start
+         + '\n\nDespués escribe su dirección en IA > Servidor de separación... '
+         + '(http://localhost:8000 si lo has arrancado en este equipo).';
+
+  return `No se pudo conectar con el servidor de separación${server !== '' ? ' (' + server + ')' : ''}.\n\n` + start
+       + '\n\nSi está en otra dirección, cámbiala en IA > Servidor de separación... (ver README.md).';
+}
 
 export class SeparationManager {
   currentModel = 'htdemucs';
@@ -57,6 +70,7 @@ export class SeparationManager {
   private events: EventSource | null = null;
   private downloads: AbortController | null = null;
   private onFinished: ((result: SeparationResult) => void) | null = null;
+  private server = '';
 
   getName(): string {
     return 'Demucs';
@@ -87,10 +101,11 @@ export class SeparationManager {
     this.status = 'Subiendo la canción al servidor de separación...';
     this.jobId = '';
     this.onFinished = onFinished;
+    this.server = getSeparationServer();
 
     const request = new XMLHttpRequest();
     this.upload = request;
-    request.open('POST', `/api/separations?model=${encodeURIComponent(this.currentModel)}&name=${encodeURIComponent(fileName)}`);
+    request.open('POST', this.url(`/api/separations?model=${encodeURIComponent(this.currentModel)}&name=${encodeURIComponent(fileName)}`));
     request.responseType = 'json';
 
     request.upload.onprogress = event => {
@@ -98,7 +113,7 @@ export class SeparationManager {
         this.status = `Subiendo la canción al servidor de separación... ${Math.round((event.loaded / event.total) * 100)} %`;
     };
 
-    request.onerror = () => this.finish({ ok: false, cancelled: false, error: serverHelp, stems: [] });
+    request.onerror = () => this.finish({ ok: false, cancelled: false, error: serverHelp(this.server), stems: [], serverUnavailable: true });
     request.onabort = () => this.finish({ ok: false, cancelled: true, error: 'Separación cancelada.', stems: [] });
 
     request.onload = () => {
@@ -107,8 +122,8 @@ export class SeparationManager {
 
       if (request.status !== 201 || body?.id === undefined) {
         const error = request.status === 404 || request.status === 502 || request.status === 504 || request.status === 0
-          ? serverHelp : body?.error ?? `El servidor respondió ${request.status}.`;
-        this.finish({ ok: false, cancelled: false, error, stems: [] });
+          ? serverHelp(this.server) : body?.error ?? `El servidor respondió ${request.status}.`;
+        this.finish({ ok: false, cancelled: false, error, stems: [], serverUnavailable: error === serverHelp(this.server) });
         return;
       }
 
@@ -122,7 +137,7 @@ export class SeparationManager {
   }
 
   private follow(jobId: string): void {
-    const source = new EventSource(`/api/separations/${jobId}/events`);
+    const source = new EventSource(this.url(`/api/separations/${jobId}/events`));
     this.events = source;
     let finished = false;
 
@@ -161,15 +176,15 @@ export class SeparationManager {
       if (finished || this.cancelled)
         return;
 
-      void fetch(`/api/separations/${jobId}/events`, { method: 'HEAD' }).then(response => {
+      void fetch(this.url(`/api/separations/${jobId}/events`), { method: 'HEAD' }).then(response => {
         if (!response.ok && !finished && !this.cancelled) {
           source.close();
-          this.finish({ ok: false, cancelled: false, error: serverHelp, stems: [] });
+          this.finish({ ok: false, cancelled: false, error: serverHelp(this.server), stems: [], serverUnavailable: true });
         }
       }).catch(() => {
         if (!finished && !this.cancelled) {
           source.close();
-          this.finish({ ok: false, cancelled: false, error: serverHelp, stems: [] });
+          this.finish({ ok: false, cancelled: false, error: serverHelp(this.server), stems: [], serverUnavailable: true });
         }
       });
     };
@@ -184,7 +199,7 @@ export class SeparationManager {
       const result: Stem[] = [];
 
       for (const stem of stems) {
-        const response = await fetch(stem.url, { signal: this.downloads.signal });
+        const response = await fetch(this.url(stem.url), { signal: this.downloads.signal });
 
         if (!response.ok)
           throw new Error(`No se pudo descargar el stem "${stem.name}" (${response.status}).`);
@@ -208,9 +223,14 @@ export class SeparationManager {
   /** El servidor borra la canción y los stems. */
   private forget(): void {
     if (this.jobId !== '') {
-      void fetch(`/api/separations/${this.jobId}`, { method: 'DELETE' }).catch(() => undefined);
+      void fetch(this.url(`/api/separations/${this.jobId}`), { method: 'DELETE' }).catch(() => undefined);
       this.jobId = '';
     }
+  }
+
+  /** Rutas de la API en el servidor de esta separación. */
+  private url(path: string): string {
+    return apiUrl(path, this.server);
   }
 
   cancel(): void {
