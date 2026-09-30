@@ -97,6 +97,7 @@ export function showDesktopDownloadDialog(): void {
       status.textContent = `Versión ${version}` + (sizeBytes > 0 ? ` · ${Math.round(sizeBytes / 1048576)} MB` : '') + ' · StemLab-Setup.exe';
     } else if (result.state === 'none') {
       download.disabled = true;
+      download.textContent = 'Aún no disponible';
       status.textContent = 'Todavía no hay ninguna versión publicada para descargar.';
     } else {
       status.textContent = 'No se pudo comprobar la última versión: se descargará la más reciente publicada.';

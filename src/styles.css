@@ -582,7 +582,8 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
   color: var(--text);
 }
 
-.dialog-button:hover { filter: brightness(1.15); }
+.dialog-button:hover:not(:disabled) { filter: brightness(1.15); }
+.dialog-button:disabled { opacity: 0.4; cursor: default; }
 .dialog-button.primary { background: var(--accent); border-color: var(--accent); color: var(--background); font-weight: 700; }
 .dialog-button.danger { background: var(--record); border-color: var(--record); color: #fff; }
 
