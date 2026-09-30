@@ -25,6 +25,11 @@ Archivo/Grabación → Gain → Saturación → EQ → Compresor → Limiter →
 
 Al cerrar o recargar la pestaña con pistas, el navegador pide confirmación: lo que no se haya descargado se pierde.
 
+**StemLab para Windows** (botón de la barra superior, o **Ayuda → Descargar StemLab para Windows**) descarga el
+instalador de la versión de escritorio: guarda proyectos y separa en el propio equipo, sin servidor (lleva Python y
+Demucs). El `.exe` no está en esta web: lo publica el repositorio de StemLab en sus
+[releases](https://github.com/Andres-Maya/StemLab/releases/latest) y la web muestra siempre la última versión.
+
 ---
 
 ## Arquitectura
@@ -45,12 +50,14 @@ src/
           project.ts      sesión: pistas, carpetas, grabaciones, deshacer/rehacer
           undo.ts         historial por transacciones
   ai/     separator.ts    cliente del servidor de separación (subir, progreso, descargar stems)
+          serverConfig.ts dirección del servidor de separación (misma web, este equipo u otro)
   export/ export.worker   render fuera de tiempo real en un Web Worker (WAV, MP3, ZIP)
   ui/     trackList · trackRow · waveformLane · timeRuler · mixerView · transportBar · statusBar
-          separationScreen (pantalla de ondas) · exportDialog · audioSettings · menu · dialogs · controls
+          separationScreen (pantalla de ondas) · exportDialog · audioSettings · serverDialog · menu · dialogs · controls
+          desktopDownload (StemLab para Windows: la última release del instalador)
 server/
   stemlab_server.py       sirve la aplicación compilada y separa con Demucs (solo biblioteca estándar)
-  stemlab_separate.py     el script de StemLab de escritorio, con salida FLAC para la web
+  stemlab_separate.py     copia idéntica del script de StemLab de escritorio (la web usa --format flac)
 tests/run.ts              pruebas automáticas (ver "Pruebas")
 ```
 
@@ -205,7 +212,7 @@ los navegadores basados en Chromium (Chrome, Edge); en el resto se usa la del si
 ## Pruebas
 
 ```powershell
-npm test          # DSP, mezclador, clips, historial, proyecto, carpetas, grabación y WAV (Node, sin navegador)
+npm test          # DSP, mezclador, clips, historial, proyecto, carpetas, grabación, WAV, servidor e instalador (Node)
 npm run build     # comprueba los tipos y compila
 ```
 
@@ -215,5 +222,5 @@ Cada comprobación imprime `ok:` o `FALLO:`. Al final aparece `RESULTADO: n/m`, 
 
 - **Memoria**: el audio se guarda en memoria como float estéreo (unos 23 MB por minuto y pista a 48 kHz). En móviles, las canciones largas con muchas pistas pueden agotar la memoria de la pestaña.
 - **Sin proyectos**: la sesión no se guarda; si se cierra la pestaña se pierde lo que no se haya descargado.
-- **Separación**: necesita el servidor de Python (Demucs no cabe en el navegador). En CPU puede tardar varios minutos por canción; con una GPU NVIDIA y PyTorch con CUDA, mucho menos.
+- **Separación**: necesita el servidor de Python (Demucs no cabe en el navegador) o StemLab para Windows. En CPU puede tardar varios minutos por canción; con una GPU NVIDIA y PyTorch con CUDA, mucho menos.
 - **Saturación sin sobremuestreo** y **deshacer** que aún no cubre volumen, paneo, mute, solo ni efectos, como en la versión de escritorio.

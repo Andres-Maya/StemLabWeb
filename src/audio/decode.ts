@@ -6,7 +6,7 @@ import { createSource, type ClipSource } from '../model/clip.ts';
 import { toSharedFloat32 } from './memory.ts';
 import { encodeWav } from './wav.ts';
 
-export const audioFileExtensions = ['wav', 'mp3', 'flac', 'ogg', 'oga', 'opus', 'm4a', 'aac', 'aif', 'aiff', 'webm', 'weba', 'mp4'];
+const audioFileExtensions = ['wav', 'mp3', 'flac', 'ogg', 'oga', 'opus', 'm4a', 'aac', 'aif', 'aiff', 'webm', 'weba', 'mp4'];
 
 export function isAudioFile(file: File): boolean {
   const extension = file.name.split('.').pop()?.toLowerCase() ?? '';

@@ -103,15 +103,4 @@ export class Parameter {
 
     return this.unit === '' ? text : text + ' ' + this.unit;
   }
-
-  toVar(): number | boolean {
-    return this.kind === 'toggle' ? this.getBool() : this.kind === 'choice' ? this.getIndex() : this.value;
-  }
-
-  fromVar(state: unknown): void {
-    if (typeof state === 'number')
-      this.set(state);
-    else if (typeof state === 'boolean')
-      this.set(state ? 1 : 0);
-  }
 }

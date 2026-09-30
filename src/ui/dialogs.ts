@@ -14,10 +14,11 @@ export interface Dialog {
   close(value?: number): void;
 }
 
-let openDialogs = 0;
+/** Diálogos abiertos, el de arriba al final: el teclado es para ese. */
+const openDialogs: HTMLElement[] = [];
 
 export function isDialogOpen(): boolean {
-  return openDialogs > 0;
+  return openDialogs.length > 0;
 }
 
 /** Diálogo con título, contenido y botones. Esc = el valor 0 (cancelar). */
@@ -48,7 +49,7 @@ export function openDialog(title: string, content: Node | string, buttons: Dialo
       return;
 
     closed = true;
-    --openDialogs;
+    openDialogs.splice(openDialogs.indexOf(overlay), 1);
     overlay.remove();
     document.removeEventListener('keydown', keys, true);
     previousFocus?.focus?.({ preventScroll: true });
@@ -56,7 +57,7 @@ export function openDialog(title: string, content: Node | string, buttons: Dialo
   };
 
   const keys = (event: KeyboardEvent) => {
-    if (!overlay.isConnected)
+    if (openDialogs[openDialogs.length - 1] !== overlay)
       return;
 
     if (event.key === 'Escape') {
@@ -65,12 +66,12 @@ export function openDialog(title: string, content: Node | string, buttons: Dialo
       close(0);
     } else if (event.key === 'Enter' && !(event.target instanceof HTMLTextAreaElement)
                && !(event.target instanceof HTMLButtonElement)) {
-      const primary = buttons.find(b => b.primary);
+      const primary = footer.querySelector<HTMLButtonElement>('.dialog-button.primary');
 
-      if (primary !== undefined) {
+      if (primary !== null && !primary.disabled) {
         event.preventDefault();
         event.stopPropagation();
-        close(primary.value);
+        primary.click();
       }
     } else {
       // Los atajos de la aplicación no actúan detrás del diálogo.
@@ -87,7 +88,7 @@ export function openDialog(title: string, content: Node | string, buttons: Dialo
 
   document.addEventListener('keydown', keys, true);
   document.body.append(overlay);
-  ++openDialogs;
+  openDialogs.push(overlay);
 
   const focusTarget = panel.querySelector<HTMLElement>('input, select, textarea')
                    ?? footer.querySelector<HTMLElement>('.primary') ?? footer.querySelector('button');

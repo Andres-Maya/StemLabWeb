@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 
 // SharedArrayBuffer (el audio se comparte sin copiar entre la página, el
@@ -7,17 +8,16 @@ const isolation = {
   'Cross-Origin-Embedder-Policy': 'require-corp',
 };
 
+// La separación por IA la hace el servidor de Python (server/stemlab_server.py).
+const api = { '/api': 'http://127.0.0.1:8000' };
+
+// La versión de "Acerca de" sale de package.json (no se repite en el código).
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
+
 export default defineConfig({
-  server: {
-    port: 5173,
-    headers: isolation,
-    // La separación por IA la hace el servidor de Python (server/stemlab_server.py).
-    proxy: { '/api': 'http://127.0.0.1:8000' },
-  },
-  preview: {
-    headers: isolation,
-    proxy: { '/api': 'http://127.0.0.1:8000' },
-  },
+  define: { __APP_VERSION__: JSON.stringify(version) },
+  server: { port: 5173, headers: isolation, proxy: api },
+  preview: { headers: isolation, proxy: api },
   worker: { format: 'es' },
   build: { target: 'es2022' },
 });

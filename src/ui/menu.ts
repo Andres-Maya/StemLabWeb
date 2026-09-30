@@ -18,7 +18,7 @@ export const submenu = (label: string, items: MenuEntry[], enabled = true): Menu
 let openMenus: HTMLElement[] = [];
 let onCloseAll: (() => void) | null = null;
 
-export function closeMenus(): void {
+function closeMenus(): void {
   for (const menu of openMenus)
     menu.remove();
 

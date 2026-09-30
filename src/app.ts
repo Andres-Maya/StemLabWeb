@@ -22,6 +22,7 @@ import { ProjectManager, type NewTrack, type Result } from './model/project.ts';
 import type { AudioTrack, TrackFolder } from './model/track.ts';
 import { showAudioSettings } from './ui/audioSettings.ts';
 import { trackColourFor, type Colour } from './ui/colour.ts';
+import { showDesktopDownloadDialog } from './ui/desktopDownload.ts';
 import { isDialogOpen, openDialog, showConfirm, showMessage } from './ui/dialogs.ts';
 import { h, isEditingText } from './ui/dom.ts';
 import { ProgressDialog, showExportDialog, type ExportScope } from './ui/exportDialog.ts';
@@ -32,8 +33,6 @@ import { SeparationScreen, SeparationView } from './ui/separationScreen.ts';
 import { StatusBar } from './ui/statusBar.ts';
 import { TrackList, type FolderInfo } from './ui/trackList.ts';
 import { TransportBar } from './ui/transportBar.ts';
-
-const version = '0.1.0';
 
 export class App {
   readonly engine = new AudioEngine();
@@ -62,8 +61,15 @@ export class App {
   constructor(root: HTMLElement) {
     this.menuBar = new MenuBar(['Archivo', 'Editar', 'Proyecto', 'Audio', 'IA', 'Ayuda'], index => this.getMenu(index));
 
+    const desktopButton = h('button', { className: 'desktop-download', type: 'button',
+                                        title: 'Descargar StemLab para Windows: la versión de escritorio (instalador .exe)' });
+    desktopButton.innerHTML = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v6M3.2 5 6 7.8 8.8 5M2 10.5h8"/></svg>';
+    desktopButton.append(h('span', { text: 'StemLab para Windows' }));
+    desktopButton.addEventListener('click', () => showDesktopDownloadDialog());
+
     root.append(
-      h('header', { className: 'app-header' }, h('div', { className: 'app-logo', 'aria-hidden': 'true' }), this.menuBar.element),
+      h('header', { className: 'app-header' }, h('div', { className: 'app-logo', 'aria-hidden': 'true' }), this.menuBar.element,
+        desktopButton),
       this.transportBar.element,
       this.trackList.element,
       this.mixer.element,
@@ -231,6 +237,8 @@ export class App {
       default:
         return [
           item('Atajos de teclado', () => this.showShortcuts()),
+          item('Descargar StemLab para Windows...', () => showDesktopDownloadDialog()),
+          separator(),
           item('Acerca de StemLab Web', () => this.showAbout()),
         ];
     }
@@ -1110,7 +1118,7 @@ export class App {
   //============================================================================
   private showAbout(): void {
     void showMessage('Acerca de StemLab Web',
-      `StemLab Web ${version}\n\n`
+      `StemLab Web ${__APP_VERSION__}\n\n`
       + 'Mini-DAW en el navegador para separar, editar, grabar y mezclar instrumentos. Es la versión web de StemLab de escritorio.\n\n'
       + 'El audio se procesa en tu navegador. La separación de fuentes la hace Demucs (Python + PyTorch) en el servidor de StemLab Web, '
       + 'que borra la canción y los stems en cuanto se descargan: nada se guarda en la nube.', 'info');

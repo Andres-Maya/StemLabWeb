@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """StemLab: separación de instrumentos con Demucs.
 
-Es el mismo script que usa StemLab de escritorio (python/stemlab_separate.py),
-con una opción más: --format flac, para que StemLab Web descargue los stems
-en FLAC de 24 bits (la mitad que un WAV float). Un stem que pase de 0 dBFS se
-escribe en WAV float para no recortarlo. El servidor web lo ejecuta así:
+StemLab (C++) y el servidor de StemLab Web ejecutan este mismo script como
+un proceso externo (los dos proyectos llevan una copia idéntica):
 
-    python -u -X utf8 stemlab_separate.py --input cancion.mp3 --output DIR --format flac
+    python -u -X utf8 stemlab_separate.py --input cancion.mp3 --output stems/cancion
 
 El script solo hace la parte de IA: cargar el modelo, preprocesar, inferir y
-escribir un archivo por instrumento. Se comunica por stdout con líneas que
-empiezan por "@@":
+escribir un archivo por instrumento: WAV float 32 (por defecto) o, con
+--format flac, FLAC de 24 bits (la mitad de tamaño: la web los descarga así).
+Un stem que pase de 0 dBFS se escribe siempre en WAV float para no recortarlo.
+Se comunica por stdout con líneas que empiezan por "@@":
 
     @@STATUS <texto>          mensaje para la barra de estado
     @@PROGRESS <0..1>         progreso global
@@ -242,9 +242,9 @@ def main() -> int:
         return 0
     except ModuleNotFoundError as error:
         emit("ERROR", f"Falta el paquete de Python '{error.name}'. "
-                      "Instala las dependencias: pip install -r server/requirements.txt")
+                      "Instala las dependencias de requirements.txt (ver README.md).")
         return 2
-    except Exception as error:  # noqa: BLE001 - se informa al servidor
+    except Exception as error:  # noqa: BLE001 - se informa a quien lo ejecuta
         emit("ERROR", f"{type(error).__name__}: {error}".replace("\n", "\\n"))
         return 1
 

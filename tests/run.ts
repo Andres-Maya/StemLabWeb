@@ -18,6 +18,8 @@ import { encodeWav } from '../src/audio/wav.ts';
 import { Parameter } from '../src/core/parameter.ts';
 import { NormalisableRange } from '../src/core/range.ts';
 import { formatTime } from '../src/core/strings.ts';
+import { normaliseServerUrl } from '../src/ai/serverConfig.ts';
+import { installerFromRelease } from '../src/ui/desktopDownload.ts';
 
 let passed = 0, total = 0;
 
@@ -304,6 +306,28 @@ console.log('--- WAV');
         && sizes[2].byteLength === 44 + 8000);
   const view = new DataView(sizes[2]);
   check('WAV 32 bits en coma flotante', view.getUint16(20, true) === 3 && near(view.getFloat32(44 + 8 * 10, true), data[10], 1e-7));
+}
+
+//==============================================================================
+console.log('--- Servidor de separación y StemLab para Windows');
+{
+  check('dirección local sin protocolo: http', normaliseServerUrl(' localhost:8000/ ') === 'http://localhost:8000');
+  check('dirección pública sin protocolo: https, sin /api', normaliseServerUrl('separacion.example.com/api/') === 'https://separacion.example.com');
+  check('vacía: esta misma web', normaliseServerUrl('') === '');
+
+  const release = {
+    tag_name: 'v0.2.0',
+    assets: [
+      { name: 'notas.txt', browser_download_url: 'https://example.com/notas.txt', size: 10 },
+      { name: 'StemLab-Setup.exe', browser_download_url: 'https://example.com/StemLab-Setup.exe', size: 314572800 },
+    ],
+  };
+  const installer = installerFromRelease(release);
+  check('release con instalador: versión, enlace y tamaño', installer?.version === '0.2.0'
+        && installer.url === 'https://example.com/StemLab-Setup.exe' && installer.sizeBytes === 314572800);
+  check('release sin instalador: nada que descargar', installerFromRelease({ tag_name: 'v0.2.0', assets: [release.assets[0]] }) === null);
+  check('respuesta inesperada de la API: nada que descargar', installerFromRelease(null) === null
+        && installerFromRelease({ message: 'Not Found' }) === null);
 }
 
 console.log(`\nRESULTADO: ${passed}/${total}`);

@@ -21,10 +21,6 @@ export class Colour {
     return new Colour(this.r, this.g, this.b, Math.min(1, Math.max(0, a)));
   }
 
-  withMultipliedAlpha(factor: number): Colour {
-    return this.withAlpha(this.a * factor);
-  }
-
   brighter(amount = 0.4): Colour {
     const k = 1 / (1 + amount);
     return new Colour(255 - k * (255 - this.r), 255 - k * (255 - this.g), 255 - k * (255 - this.b), this.a);

@@ -21,6 +21,8 @@ export interface RecordingInfo {
 
 type SinkContext = AudioContext & { setSinkId?: (id: string) => Promise<void>; sinkId?: string };
 
+const defaultOutputName = 'predeterminada del sistema';
+
 export class AudioEngine {
   readonly context: SinkContext;
   readonly sampleRate: number;
@@ -55,6 +57,8 @@ export class AudioEngine {
   private micSource: MediaStreamAudioSourceNode | null = null;
   inputDeviceId = '';
   outputDeviceId = '';            // '' = la salida predeterminada del sistema
+  /** Nombre de la salida que suena (se actualiza al cambiarla). */
+  outputName = defaultOutputName;
 
   private uploaded = new Set<number>();
   private listeners = new Set<() => void>();
@@ -345,6 +349,8 @@ export class AudioEngine {
 
     await this.context.setSinkId!(deviceId);
     this.outputDeviceId = deviceId;
+    this.outputName = deviceId === '' ? defaultOutputName
+      : (await this.listDevices()).outputs.find(d => d.deviceId === deviceId)?.label || 'dispositivo elegido';
   }
 
   async listDevices(): Promise<{ inputs: MediaDeviceInfo[]; outputs: MediaDeviceInfo[] }> {
@@ -353,14 +359,6 @@ export class AudioEngine {
       inputs: devices.filter(d => d.kind === 'audioinput' && d.deviceId !== 'default' && d.deviceId !== 'communications'),
       outputs: devices.filter(d => d.kind === 'audiooutput' && d.deviceId !== 'default' && d.deviceId !== 'communications'),
     };
-  }
-
-  async getOutputName(): Promise<string> {
-    if (this.outputDeviceId === '')
-      return 'predeterminada del sistema';
-
-    const { outputs } = await this.listDevices();
-    return outputs.find(d => d.deviceId === this.outputDeviceId)?.label || 'dispositivo elegido';
   }
 
   /** Al conectar o desconectar dispositivos: si el elegido ya no está, se

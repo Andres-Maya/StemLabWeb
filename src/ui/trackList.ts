@@ -116,8 +116,8 @@ export class TrackList {
   private viewport = h('div', { className: 'track-viewport' });
   private content = h('div', { className: 'track-content' });
   private emptyHint = h('div', { className: 'empty-hint' });
-  private emptyAddButton = this.createAddButton('Añadir una pista (T)');
-  private addBelowButton = this.createAddButton('Añadir una pista debajo');
+  private emptyAddButton = this.createAddButton('Añadir una pista (T)', () => this.onAddTrack(-1, ''));
+  private addBelowButton = this.createAddButton('Añadir una pista debajo', () => this.addBelow());
   private recordingCanvas = h('canvas', { className: 'recording-lane' });
   private playhead = h('div', { className: 'playhead' });
   private scrollTrack = h('div', { className: 'hscroll-track' });
@@ -169,17 +169,8 @@ export class TrackList {
 
     this.emptyHint.textContent = 'Pulsa + para añadir una pista, arrastra aquí una canción o usa Archivo > Importar audio...\n'
                                + 'Después, IA > Separar instrumentos. Para grabar, añade una pista y pulsa R.';
-    this.emptyAddButton.element.style.top = '6px';
-    this.emptyAddButton.onClick = () => this.onAddTrack(-1, '');
-    this.addBelowButton.onClick = () => {
-      // El "+" de una pista de carpeta añade la nueva dentro de la carpeta.
-      const row = this.rows[this.addBelowRow];
-
-      if (row !== undefined)
-        this.onAddTrack(this.addBelowRow + 1, this.findFolder(row.track.folderId) !== undefined ? row.track.folderId : '');
-    };
-
-    this.content.append(this.emptyHint, this.emptyAddButton.element, this.recordingCanvas, this.playhead, this.addBelowButton.element);
+    this.emptyAddButton.style.top = '6px';
+    this.content.append(this.emptyHint, this.emptyAddButton, this.recordingCanvas, this.playhead, this.addBelowButton);
     this.viewport.append(this.content);
     this.scrollTrack.append(this.scrollThumb);
 
@@ -220,12 +211,12 @@ export class TrackList {
     // Las filas de pistas eliminadas se quitan (y liberan su pista).
     for (const row of this.rows)
       if (!newRows.includes(row))
-        row.element.remove();
+        row.dispose();
 
     this.rows = newRows;
     this.rebuildEntries();
     this.emptyHint.style.display = this.rows.length === 0 ? 'block' : 'none';
-    this.emptyAddButton.element.style.display = this.rows.length === 0 ? 'block' : 'none';
+    this.emptyAddButton.style.display = this.rows.length === 0 ? 'block' : 'none';
     this.hideAddButton();
 
     if (this.selected !== null && !this.rows.some(r => r.track === this.selected))
@@ -271,13 +262,20 @@ export class TrackList {
     return row;
   }
 
-  private createAddButton(tooltip: string) {
+  /** "+" en un círculo sobre una línea: solo el círculo responde al ratón. */
+  private createAddButton(tooltip: string, onClick: () => void): HTMLElement {
     const circle = h('button', { className: 'add-track-circle', type: 'button', title: tooltip, 'aria-label': tooltip });
-    const element = h('div', { className: 'add-track-button' }, h('div', { className: 'add-track-line' }), circle);
-    const button = { element, onClick: () => undefined as void };
-    circle.addEventListener('click', () => button.onClick());
+    circle.addEventListener('click', onClick);
     circle.addEventListener('pointerdown', e => e.stopPropagation());
-    return button;
+    return h('div', { className: 'add-track-button' }, h('div', { className: 'add-track-line' }), circle);
+  }
+
+  /** El "+" de una pista de carpeta añade la nueva dentro de la carpeta. */
+  private addBelow(): void {
+    const row = this.rows[this.addBelowRow];
+
+    if (row !== undefined)
+      this.onAddTrack(this.addBelowRow + 1, this.findFolder(row.track.folderId) !== undefined ? row.track.folderId : '');
   }
 
   //============================================================================
@@ -647,7 +645,7 @@ export class TrackList {
     if (this.rows.length === 0 || this.draggingRow >= 0 || (event.buttons & 1) !== 0)
       return;
 
-    if (this.addBelowButton.element.contains(event.target as Node))
+    if (this.addBelowButton.contains(event.target as Node))
       return;
 
     const y = event.clientY - this.content.getBoundingClientRect().top;
@@ -666,10 +664,10 @@ export class TrackList {
 
     const row = this.rows.indexOf(entry.row);
 
-    if (row !== this.addBelowRow || this.addBelowButton.element.style.display !== 'block') {
+    if (row !== this.addBelowRow || this.addBelowButton.style.display !== 'block') {
       this.addBelowRow = row;
       const border = entry.row.element.offsetTop + rowHeight - 1;
-      const button = this.addBelowButton.element;
+      const button = this.addBelowButton;
       button.style.top = `${border - addButtonHeight / 2}px`;
       button.style.setProperty('--add-colour', entry.row.colour.toString());
       button.style.display = 'block';
@@ -677,7 +675,7 @@ export class TrackList {
   }
 
   private hideAddButton(): void {
-    this.addBelowButton.element.style.display = 'none';
+    this.addBelowButton.style.display = 'none';
     this.addBelowRow = -1;
   }
 

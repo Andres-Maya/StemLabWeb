@@ -45,18 +45,19 @@ type ServerEvent =
   | { type: 'cancelled' };
 
 /** Qué hacer cuando no se puede conectar con el servidor de separación. */
-export function serverHelp(server = getSeparationServer()): string {
+function serverHelp(server: string): string {
   const start = 'La separación por IA la hace Demucs (Python + PyTorch) en el servidor de StemLab Web, '
               + 'que no puede ejecutarse dentro del navegador ni en Vercel. Ponlo en marcha con el Python '
               + 'que tiene Demucs instalado:\n\n    python server/stemlab_server.py';
+  const desktop = '\n\nO instala StemLab para Windows (Ayuda > Descargar StemLab para Windows): separa en tu equipo, sin servidor.';
 
   if (server === '' && !isLocalPage())
     return 'Esta web no tiene un servidor de separación configurado.\n\n' + start
          + '\n\nDespués escribe su dirección en IA > Servidor de separación... '
-         + '(http://localhost:8000 si lo has arrancado en este equipo).';
+         + '(http://localhost:8000 si lo has arrancado en este equipo).' + desktop;
 
   return `No se pudo conectar con el servidor de separación${server !== '' ? ' (' + server + ')' : ''}.\n\n` + start
-       + '\n\nSi está en otra dirección, cámbiala en IA > Servidor de separación... (ver README.md).';
+       + '\n\nSi está en otra dirección, cámbiala en IA > Servidor de separación... (ver README.md).' + desktop;
 }
 
 export class SeparationManager {
@@ -74,10 +75,6 @@ export class SeparationManager {
 
   getName(): string {
     return 'Demucs';
-  }
-
-  getAvailableModels(): ModelInfo[] {
-    return MODELS;
   }
 
   /** Pistas que generará el modelo actual (para mostrarlas antes de que existan). */
@@ -113,7 +110,7 @@ export class SeparationManager {
         this.status = `Subiendo la canción al servidor de separación... ${Math.round((event.loaded / event.total) * 100)} %`;
     };
 
-    request.onerror = () => this.finish({ ok: false, cancelled: false, error: serverHelp(this.server), stems: [], serverUnavailable: true });
+    request.onerror = () => this.finishUnavailable();
     request.onabort = () => this.finish({ ok: false, cancelled: true, error: 'Separación cancelada.', stems: [] });
 
     request.onload = () => {
@@ -121,9 +118,12 @@ export class SeparationManager {
       const body = request.response as { id?: string; error?: string } | null;
 
       if (request.status !== 201 || body?.id === undefined) {
-        const error = request.status === 404 || request.status === 502 || request.status === 504 || request.status === 0
-          ? serverHelp(this.server) : body?.error ?? `El servidor respondió ${request.status}.`;
-        this.finish({ ok: false, cancelled: false, error, stems: [], serverUnavailable: error === serverHelp(this.server) });
+        // Sin servidor de separación detrás (404 de Vercel, proxy de Vite sin Python...).
+        if ([0, 404, 502, 504].includes(request.status))
+          this.finishUnavailable();
+        else
+          this.finish({ ok: false, cancelled: false, error: body?.error ?? `El servidor respondió ${request.status}.`, stems: [] });
+
         return;
       }
 
@@ -176,17 +176,15 @@ export class SeparationManager {
       if (finished || this.cancelled)
         return;
 
-      void fetch(this.url(`/api/separations/${jobId}/events`), { method: 'HEAD' }).then(response => {
-        if (!response.ok && !finished && !this.cancelled) {
-          source.close();
-          this.finish({ ok: false, cancelled: false, error: serverHelp(this.server), stems: [], serverUnavailable: true });
-        }
-      }).catch(() => {
+      const giveUp = () => {
         if (!finished && !this.cancelled) {
           source.close();
-          this.finish({ ok: false, cancelled: false, error: serverHelp(this.server), stems: [], serverUnavailable: true });
+          this.finishUnavailable();
         }
-      });
+      };
+
+      void fetch(this.url(`/api/separations/${jobId}/events`), { method: 'HEAD' })
+        .then(response => { if (!response.ok) giveUp(); }, giveUp);
     };
   }
 
@@ -231,6 +229,11 @@ export class SeparationManager {
   /** Rutas de la API en el servidor de esta separación. */
   private url(path: string): string {
     return apiUrl(path, this.server);
+  }
+
+  /** No se pudo hablar con el servidor: hay que arrancarlo o cambiar su dirección. */
+  private finishUnavailable(): void {
+    this.finish({ ok: false, cancelled: false, error: serverHelp(this.server), stems: [], serverUnavailable: true });
   }
 
   cancel(): void {

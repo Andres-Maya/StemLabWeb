@@ -66,6 +66,8 @@ export class WaveformLane {
   onClipClicked: (clipId: number) => void = () => undefined;
   onContextMenu: (clipId: number, seconds: number, x: number, y: number) => void = () => undefined;
   onClipsEdited: (clipsBefore: AudioClip[], actionName: string) => void = () => undefined;
+  /** Cada movimiento del arrastre llega al motor al momento (para oírlo). */
+  onLiveEdit: () => void = () => undefined;
   onWheel: (x: number, event: WheelEvent) => boolean = () => false;
 
   constructor(track: AudioTrack) {
@@ -499,9 +501,6 @@ export class WaveformLane {
     this.invalidate();
   }
 
-  /** Cada movimiento del arrastre llega al motor al momento. */
-  onLiveEdit: () => void = () => undefined;
-
   private pointerUp(event: PointerEvent): void {
     const mode = this.dragMode;
     const changed = this.dragChanged;
@@ -532,10 +531,5 @@ export class WaveformLane {
       // Clic sin arrastrar sobre un clip: además de seleccionarlo, el cabezal
       // va ahí (para grabar o pegar a continuación, o escuchar desde ese punto).
       this.onSeek(this.clickSeconds);
-  }
-
-  /** Estado de la animación (para las pruebas). */
-  getLiftAmount(): number {
-    return this.lift;
   }
 }

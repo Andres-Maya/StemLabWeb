@@ -44,7 +44,7 @@ export async function showAudioSettings(engine: AudioEngine, onMessage: (message
   outputSelect.addEventListener('change', async () => {
     try {
       await engine.setOutputDevice(outputSelect.value);
-      onMessage('Salida: ' + await engine.getOutputName());
+      onMessage('Salida: ' + engine.outputName);
     } catch {
       onMessage('No se pudo cambiar la salida de audio.');
     }

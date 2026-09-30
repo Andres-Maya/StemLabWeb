@@ -43,12 +43,8 @@ export class NormalisableRange {
   }
 }
 
-export function clamp01(x: number): number {
+function clamp01(x: number): number {
   return x < 0 ? 0 : x > 1 ? 1 : x;
-}
-
-export function clamp(min: number, max: number, x: number): number {
-  return x < min ? min : x > max ? max : x;
 }
 
 export function decibelsToGain(db: number, minusInfinityDb = -100): number {

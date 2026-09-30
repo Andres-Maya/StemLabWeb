@@ -17,7 +17,6 @@ export type ToWorklet =
 
 export interface Tick {
   type: 'tick';
-  frame: number;                       // currentFrame del AudioContext al enviarlo
   position: number;                    // cabezal (muestras)
   playing: boolean;
   recording: boolean;

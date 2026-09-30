@@ -98,9 +98,4 @@ export class UndoManager {
     this.nextIndex = 0;
     this.pendingName = null;
   }
-
-  /** Todas las acciones del historial (para saber qué audio sigue en uso). */
-  allActions(): UndoableAction[] {
-    return this.transactions.flatMap(t => t.actions);
-  }
 }

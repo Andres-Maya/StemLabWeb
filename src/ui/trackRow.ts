@@ -35,6 +35,7 @@ export class TrackRow {
   private editing = false;
   private selected = false;
   private folderColour = Palette.transparent;
+  private stopWatchingMute: () => void;
   reordering = false;
 
   onSelect: (row: TrackRow) => void = () => undefined;
@@ -78,7 +79,7 @@ export class TrackRow {
     this.lane = new WaveformLane(track);
     this.lane.setWaveColour(colour);
     this.lane.setDimmed(track.mute.getBool());
-    track.mute.onChange(p => this.lane.setDimmed(p.getBool()));
+    this.stopWatchingMute = track.mute.onChange(p => this.lane.setDimmed(p.getBool()));
 
     this.element = h('div', { className: 'track-row' }, this.header, this.lane.element);
     this.element.style.setProperty('--track-colour', colour.toString());
@@ -96,6 +97,12 @@ export class TrackRow {
       this.onHeaderMenu(this, e.clientX, e.clientY);
     });
     this.trackChanged();
+  }
+
+  /** Al quitar la fila: la pista puede seguir viva (en el historial de deshacer). */
+  dispose(): void {
+    this.stopWatchingMute();
+    this.element.remove();
   }
 
   setSelected(selected: boolean): void {

@@ -21,7 +21,7 @@ import { h, prepareCanvas } from './dom.ts';
 
 const twoPi = Math.PI * 2;
 const appearSeconds = 0.8;      // lo que tarda una pista nueva en salir y colocarse
-export const ringPoints = 360;
+const ringPoints = 360;
 
 const easeOutCubic = (x: number) => { x = 1 - Math.min(1, Math.max(0, x)); return 1 - x * x * x; };
 

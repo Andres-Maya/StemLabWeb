@@ -264,7 +264,6 @@ class StemLabProcessor extends AudioWorkletProcessor {
 
     this.post({
       type: 'tick',
-      frame: currentFrame,
       position: this.pendingSeek >= 0 ? this.pendingSeek : this.position,
       playing: this.playing,
       recording: this.recording,

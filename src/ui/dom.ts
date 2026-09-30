@@ -29,34 +29,28 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attributes: Att
 /** Temporizador compartido de la interfaz (~30 veces por segundo). Los
     elementos que ya no están en la página dejan de recibirlo solos. */
 class Ticker {
-  private callbacks = new Map<object, { element: Element | null; fn: () => void }>();
+  private callbacks = new Map<object, { element: Element | null; fn: () => void; shown: boolean }>();
   private handle = 0;
 
   add(owner: object, element: Element | null, fn: () => void): void {
-    this.callbacks.set(owner, { element, fn });
+    this.callbacks.set(owner, { element, fn, shown: false });
 
     if (this.handle === 0)
       this.handle = window.setInterval(() => this.run(), 33);
   }
 
-  remove(owner: object): void {
-    this.callbacks.delete(owner);
-  }
-
   private run(): void {
-    for (const [owner, { element, fn }] of [...this.callbacks]) {
-      if (element !== null && !element.isConnected) {
-        // Todavía no insertado: se le da un margen; si se quitó, se olvida.
-        if ((element as HTMLElement).dataset.tickerSeen === '1')
+    for (const [owner, entry] of [...this.callbacks]) {
+      if (entry.element !== null && !entry.element.isConnected) {
+        // Todavía no se ha insertado (se espera) o ya se quitó (se olvida).
+        if (entry.shown)
           this.callbacks.delete(owner);
 
         continue;
       }
 
-      if (element !== null)
-        (element as HTMLElement).dataset.tickerSeen = '1';
-
-      fn();
+      entry.shown = true;
+      entry.fn();
     }
   }
 }

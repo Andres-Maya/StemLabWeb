@@ -76,6 +76,31 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
 
 .menubar-name:hover, .menubar-name.open { background: var(--panel-light); }
 
+/* StemLab para Windows: descarga del instalador de escritorio (ui/desktopDownload.ts). */
+.desktop-download {
+  margin-left: auto;
+  margin-right: 8px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 11px;
+  border: 1px solid var(--outline);
+  background: var(--panel-light);
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.desktop-download:hover { border-color: var(--accent); }
+
+.desktop-download svg { width: 12px; height: 12px; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.feature-list { margin: 0 0 10px; padding-left: 20px; }
+.feature-list li { margin-bottom: 4px; }
+
 .popup-menu {
   position: fixed;
   z-index: 300;
@@ -328,6 +353,7 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
 /* Pantallas pequeñas (móvil): cabecera de pista estrecha y transporte básico. */
 @media (max-width: 700px) {
   :root { --header-width: 150px; }
+  .desktop-download { display: none; }
   #app { grid-template-rows: 30px 52px minmax(120px, 1fr) 200px 30px; }
   .transport-bar { padding: 6px 8px; gap: 6px; }
   .icon-button { width: 40px; height: 38px; }

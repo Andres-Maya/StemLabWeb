@@ -13,8 +13,8 @@ import { AudioTrack, type TrackFolder } from './track.ts';
 import { UndoManager, type UndoableAction } from './undo.ts';
 
 export type Result = { ok: true } | { ok: false; error: string };
-export const ok: Result = { ok: true };
-export const fail = (error: string): Result => ({ ok: false, error });
+const ok: Result = { ok: true };
+const fail = (error: string): Result => ({ ok: false, error });
 
 export interface NewTrack {
   name: string;
@@ -31,7 +31,6 @@ export class ProjectManager {
   tracks: AudioTrack[] = [];
   folders: TrackFolder[] = [];
   readonly undoManager = new UndoManager(200);
-  name = 'Proyecto sin título';
   bpm = 120;
 
   // Se incrementa al empezar un proyecto nuevo: las cargas en curso del
@@ -104,7 +103,6 @@ export class ProjectManager {
 
     this.tracks = [];
     this.engine.masterVolume.resetToDefault();
-    this.name = 'Proyecto sin título';
     this.notifyTracksEdited();
   }
 

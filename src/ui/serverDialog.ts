@@ -1,6 +1,7 @@
 /** IA > Servidor de separación: dónde está el servidor de Python con Demucs. */
 import { checkSeparationServer, defaultSeparationServer, getSeparationServer, isLocalPage,
          normaliseServerUrl, setSeparationServer } from '../ai/serverConfig.ts';
+import { showDesktopDownloadDialog } from './desktopDownload.ts';
 import { openDialog } from './dialogs.ts';
 import { h } from './dom.ts';
 
@@ -38,13 +39,19 @@ export function showSeparationServerDialog(onMessage: (message: string) => void)
     result,
     h('p', { className: 'dialog-hint', text: 'En este equipo:  python server/stemlab_server.py  (con el Python que tiene '
       + 'Demucs; ver README.md). La primera vez, el navegador puede pedir permiso para acceder a la red local. '
-      + 'La canción se envía solo a ese servidor, que la borra junto con los stems en cuanto se descargan.' }));
+      + 'La canción se envía solo a ese servidor, que la borra junto con los stems en cuanto se descargan.' }),
+    h('p', { className: 'dialog-hint', text: '¿Sin servidor? StemLab para Windows separa en tu equipo: lleva Python y '
+      + 'Demucs incluidos.' }));
 
   return new Promise(resolve => {
     openDialog('Servidor de separación', content, [
       { label: 'Cancelar', value: 0 },
+      { label: 'StemLab para Windows', value: 2 },
       { label: 'Guardar', value: 1, primary: true },
     ], async value => {
+      if (value === 2)
+        showDesktopDownloadDialog();
+
       if (value !== 1) {
         resolve(false);
         return;

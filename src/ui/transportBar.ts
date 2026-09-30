@@ -21,7 +21,6 @@ export class TransportBar {
   private bpmLabel = h('div', { className: 'bpm-label', title: 'Doble clic para editar' });
   private deviceLabel = h('div', { className: 'device-label', title: 'Salida de audio actual (Audio > Configuración de audio)' });
   private blinkCounter = 0;
-  private deviceText = '';
 
   constructor(engine: AudioEngine, projects: ProjectManager) {
     this.engine = engine;
@@ -106,17 +105,12 @@ export class TransportBar {
     // Qué salida está sonando; en rojo si el audio no funciona.
     const running = this.engine.isRunning();
     const text = this.engine.initError !== '' ? 'Sin audio: este navegador no admite AudioWorklet'
-               : running ? 'Salida: ' + this.deviceText
+               : running ? 'Salida: ' + this.engine.outputName
                : 'Audio en pausa: haz clic en la página para activarlo';
 
     if (this.deviceLabel.textContent !== text) {
       this.deviceLabel.textContent = text;
       this.deviceLabel.classList.toggle('error', !running);
     }
-
-    if (++this.deviceRefresh % 30 === 1)
-      void this.engine.getOutputName().then(name => { this.deviceText = name; });
   }
-
-  private deviceRefresh = 0;
 }

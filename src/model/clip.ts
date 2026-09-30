@@ -112,11 +112,6 @@ function trimEnd(clip: AudioClip, newTimelineEnd: number): void {
   clip.length = newTimelineEnd - clip.timelineStart;
 }
 
-/** Desplaza el clip sin cambiar su contenido (nunca antes del 0). */
-function move(clip: AudioClip, newTimelineStart: number): void {
-  clip.timelineStart = Math.max(0, newTimelineStart);
-}
-
 /** Quita el clip de la lista. Devuelve true si existía. */
 function remove(clips: AudioClip[], clipId: number): boolean {
   const index = clips.findIndex(c => c.id === clipId);
@@ -257,7 +252,6 @@ export const ClipEditing = {
   split,
   trimStart,
   trimEnd,
-  move,
   remove,
   findFreeSpace,
   freeGapAt,
