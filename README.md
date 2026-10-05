@@ -25,10 +25,12 @@ Archivo/Grabación → Gain → Saturación → EQ → Compresor → Limiter →
 
 Al cerrar o recargar la pestaña con pistas, el navegador pide confirmación: lo que no se haya descargado se pierde.
 
-**StemLab para Windows** (botón de la barra superior, o **Ayuda → Descargar StemLab para Windows**) descarga el
-instalador de la versión de escritorio: guarda proyectos y separa en el propio equipo, sin servidor (lleva Python y
-Demucs). El `.exe` no está en esta web: lo publica el repositorio de StemLab en sus
-[releases](https://github.com/Andres-Maya/StemLab/releases/latest) y la web muestra siempre la última versión.
+**StemLab de escritorio** (botón de la barra superior, o **Ayuda → Descargar StemLab de escritorio**) descarga la
+versión de escritorio, que guarda proyectos y separa en el propio equipo, sin servidor (lleva Python y Demucs):
+el instalador de **Windows** (`StemLab-Setup.exe`) o el paquete de **Linux** (`StemLab-Linux-x86_64.tar.gz`). Se
+ofrece primero el del sistema desde el que se visita la web. Los archivos no están en esta web: los publica el
+repositorio de StemLab en sus [releases](https://github.com/Andres-Maya/StemLab/releases/latest) y la web muestra
+siempre la última versión (si una release no trae alguno de los dos, su botón aparece como "aún no disponible").
 
 ---
 
@@ -54,7 +56,7 @@ src/
   export/ export.worker   render fuera de tiempo real en un Web Worker (WAV, MP3, ZIP)
   ui/     trackList · trackRow · waveformLane · timeRuler · mixerView · transportBar · statusBar
           separationScreen (pantalla de ondas) · exportDialog · audioSettings · serverDialog · menu · dialogs · controls
-          desktopDownload (StemLab para Windows: la última release del instalador)
+          desktopDownload (StemLab de escritorio: última release, Windows y Linux)
 server/
   stemlab_server.py       sirve la aplicación compilada y separa con Demucs (solo biblioteca estándar)
   stemlab_separate.py     copia idéntica del script de StemLab de escritorio (la web usa --format flac)
@@ -226,5 +228,5 @@ Cada comprobación imprime `ok:` o `FALLO:`. Al final aparece `RESULTADO: n/m`, 
 
 - **Memoria**: el audio se guarda en memoria como float estéreo (unos 23 MB por minuto y pista a 48 kHz). En móviles, las canciones largas con muchas pistas pueden agotar la memoria de la pestaña.
 - **Sin proyectos**: la sesión no se guarda; si se cierra la pestaña se pierde lo que no se haya descargado.
-- **Separación**: necesita el servidor de Python (Demucs no cabe en el navegador) o StemLab para Windows. En CPU puede tardar varios minutos por canción; con una GPU NVIDIA y PyTorch con CUDA, mucho menos.
+- **Separación**: necesita el servidor de Python (Demucs no cabe en el navegador) o StemLab de escritorio (Windows o Linux). En CPU puede tardar varios minutos por canción; con una GPU NVIDIA y PyTorch con CUDA, mucho menos.
 - **Saturación sin sobremuestreo** y **deshacer** que aún no cubre volumen, paneo, mute, solo ni efectos, como en la versión de escritorio.

@@ -69,9 +69,9 @@ export class App {
                                index => this.getMenu(index));
 
     const desktopButton = h('button', { className: 'header-button desktop-download', type: 'button',
-                                        title: L('Descargar StemLab para Windows: la versión de escritorio (instalador .exe)') });
+                                        title: L('Descargar StemLab de escritorio, para Windows o Linux') });
     desktopButton.innerHTML = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5v6M3.2 5 6 7.8 8.8 5M2 10.5h8"/></svg>';
-    desktopButton.append(h('span', { text: L('StemLab para Windows') }));
+    desktopButton.append(h('span', { text: L('StemLab de escritorio') }));
     desktopButton.addEventListener('click', () => showDesktopDownloadDialog());
 
     // Tema e idioma, a la vista (también están en el menú Ver).
@@ -302,7 +302,7 @@ export class App {
         return [
           item(tr('Tutorial'), () => this.showTour()),
           item(tr('Atajos de teclado'), () => this.showShortcuts()),
-          item(tr('Descargar StemLab para Windows...'), () => showDesktopDownloadDialog()),
+          item(tr('Descargar StemLab de escritorio...'), () => showDesktopDownloadDialog()),
           separator(),
           item(tr('Acerca de StemLab Web'), () => this.showAbout()),
         ];

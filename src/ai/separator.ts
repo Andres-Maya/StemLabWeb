@@ -69,7 +69,7 @@ function serverHelp(server: string): string {
   const start = tr('La separación por IA la hace Demucs (Python + PyTorch) en el servidor de StemLab Web, '
                    + 'que no puede ejecutarse dentro del navegador ni en Vercel. Ponlo en marcha con el Python '
                    + 'que tiene Demucs instalado:') + '\n\n    python server/stemlab_server.py';
-  const desktop = '\n\n' + tr('O instala StemLab para Windows (Ayuda > Descargar StemLab para Windows): separa en tu equipo, sin servidor.');
+  const desktop = '\n\n' + tr('O instala StemLab de escritorio, para Windows o Linux (Ayuda > Descargar StemLab de escritorio): separa en tu equipo, sin servidor.');
 
   if (server === '' && !isLocalPage())
     return tr('Esta web no tiene un servidor de separación configurado.') + '\n\n' + start + '\n\n'

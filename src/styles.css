@@ -103,8 +103,8 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
 
 .menubar-name:hover, .menubar-name.open { background: var(--panel-light); }
 
-/* A la derecha del menú: tema, idioma y StemLab para Windows (la descarga del
-   instalador de escritorio, ui/desktopDownload.ts). */
+/* A la derecha del menú: tema, idioma y StemLab de escritorio (sus descargas
+   para Windows y Linux, ui/desktopDownload.ts). */
 .header-tools { margin-left: auto; margin-right: 8px; flex: none; display: flex; align-items: center; gap: 6px; }
 
 .header-button {

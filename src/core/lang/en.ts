@@ -66,10 +66,10 @@ export const en: Record<string, string> = {
   'Cambiar al tema claro': 'Switch to the light theme',
   'Tutorial': 'Tutorial',
   'Atajos de teclado': 'Keyboard shortcuts',
-  'Descargar StemLab para Windows...': 'Download StemLab for Windows...',
+  'Descargar StemLab de escritorio...': 'Download StemLab for desktop...',
   'Acerca de StemLab Web': 'About StemLab Web',
-  'Descargar StemLab para Windows: la versión de escritorio (instalador .exe)': 'Download StemLab for Windows: the desktop version (.exe installer)',
-  'StemLab para Windows': 'StemLab for Windows',
+  'Descargar StemLab de escritorio, para Windows o Linux': 'Download StemLab for desktop, for Windows or Linux',
+  'StemLab de escritorio': 'StemLab for desktop',
 
   // Botones comunes
   'Cancelar': 'Cancel',
@@ -350,8 +350,8 @@ export const en: Record<string, string> = {
   'Python terminó con código {0}:\n\n{1}': 'Python exited with code {0}:\n\n{1}',
   'La separación por IA la hace Demucs (Python + PyTorch) en el servidor de StemLab Web, que no puede ejecutarse dentro del navegador ni en Vercel. Ponlo en marcha con el Python que tiene Demucs instalado:':
     'AI separation is done by Demucs (Python + PyTorch) on the StemLab Web server, which cannot run inside the browser or on Vercel. Start it with the Python that has Demucs installed:',
-  'O instala StemLab para Windows (Ayuda > Descargar StemLab para Windows): separa en tu equipo, sin servidor.':
-    'Or install StemLab for Windows (Help > Download StemLab for Windows): it separates on your computer, with no server.',
+  'O instala StemLab de escritorio, para Windows o Linux (Ayuda > Descargar StemLab de escritorio): separa en tu equipo, sin servidor.':
+    'Or install StemLab for desktop, on Windows or Linux (Help > Download StemLab for desktop): it separates on your computer, with no server.',
   'Esta web no tiene un servidor de separación configurado.': 'This site has no separation server configured.',
   'Después escribe su dirección en IA > Servidor de separación... (http://localhost:8000 si lo has arrancado en este equipo).':
     'Then enter its address in AI > Separation server... (http://localhost:8000 if you started it on this computer).',
@@ -386,21 +386,24 @@ export const en: Record<string, string> = {
     'AI separation is done by Demucs on the StemLab Web server (server/stemlab_server.py). It cannot run inside the browser or on Vercel: start it on your computer or on a server and enter its address here.',
   'En este equipo:  python server/stemlab_server.py  (con el Python que tiene Demucs; ver README.md). La primera vez, el navegador puede pedir permiso para acceder a la red local. La canción se envía solo a ese servidor, que la borra junto con los stems en cuanto se descargan.':
     'On this computer:  python server/stemlab_server.py  (with the Python that has Demucs; see README.md). The first time, the browser may ask for permission to access the local network. The song is sent only to that server, which deletes it together with the stems as soon as they are downloaded.',
-  '¿Sin servidor? StemLab para Windows separa en tu equipo: lleva Python y Demucs incluidos.':
-    'No server? StemLab for Windows separates on your computer: Python and Demucs are included.',
+  '¿Sin servidor? StemLab de escritorio (Windows o Linux) separa en tu equipo: lleva Python y Demucs incluidos.':
+    'No server? StemLab for desktop (Windows or Linux) separates on your computer: Python and Demucs are included.',
 
-  // StemLab para Windows
+  // StemLab de escritorio
   'Buscando la última versión...': 'Looking for the latest version...',
-  'StemLab para Windows es la versión de escritorio: la misma mini-DAW, instalada en tu equipo.':
-    'StemLab for Windows is the desktop version: the same mini-DAW, installed on your computer.',
+  'StemLab de escritorio es la misma mini-DAW instalada en tu equipo, para Windows y para Linux.':
+    'StemLab for desktop is the same mini-DAW installed on your computer, for Windows and for Linux.',
   'Separa los instrumentos sin servidor: lleva Python y Demucs incluidos.': 'Separates instruments with no server: Python and Demucs are included.',
   'Guarda y abre proyectos (.stemlab) con todo su audio.': 'Saves and opens projects (.stemlab) with all their audio.',
-  'Graba con tu tarjeta de sonido en modo RAW, sin los efectos de Windows.': 'Records with your sound card in RAW mode, without the Windows effects.',
-  'Windows 10 u 11 de 64 bits. Se instala solo para tu usuario, sin permisos de administrador. Como el instalador no está firmado, Windows puede avisar: pulsa «Más información» y «Ejecutar de todas formas».':
-    '64-bit Windows 10 or 11. It installs for your user only, with no administrator rights. Because the installer is not signed, Windows may warn you: click "More info" and "Run anyway".',
-  'Descargar el instalador': 'Download the installer',
-  'Versión {0}': 'Version {0}',
-  'Aún no disponible': 'Not available yet',
+  'Graba directamente con tu tarjeta de sonido (en Windows, en modo RAW: sin los efectos del sistema).':
+    'Records straight from your sound card (on Windows, in RAW mode: without the system effects).',
+  'Windows: 10 u 11 de 64 bits. Se instala solo para tu usuario, sin permisos de administrador. Como el instalador no está firmado, Windows puede avisar: pulsa «Más información» y «Ejecutar de todas formas».':
+    'Windows: 64-bit 10 or 11. It installs for your user only, with no administrator rights. Because the installer is not signed, Windows may warn you: click "More info" and "Run anyway".',
+  'Linux: 64 bits (x86_64) con glibc 2.39 o posterior (Ubuntu 24.04, Fedora 40, Debian 13...). Descomprime el archivo y abre ./StemLab; ./install.sh lo añade al menú de aplicaciones.':
+    'Linux: 64-bit (x86_64) with glibc 2.39 or later (Ubuntu 24.04, Fedora 40, Debian 13...). Extract the file and open ./StemLab; ./install.sh adds it to the applications menu.',
+  'Descargar para {0}': 'Download for {0}',
+  'versión {0}': 'version {0}',
+  '{0}: aún no disponible': '{0}: not available yet',
   'Todavía no hay ninguna versión publicada para descargar.': 'No version has been published for download yet.',
   'No se pudo comprobar la última versión: se descargará la más reciente publicada.':
     'The latest version could not be checked: the most recent published one will be downloaded.',

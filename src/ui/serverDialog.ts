@@ -41,13 +41,13 @@ export function showSeparationServerDialog(onMessage: (message: string) => void)
     h('p', { className: 'dialog-hint', text: tr('En este equipo:  python server/stemlab_server.py  (con el Python que tiene '
       + 'Demucs; ver README.md). La primera vez, el navegador puede pedir permiso para acceder a la red local. '
       + 'La canción se envía solo a ese servidor, que la borra junto con los stems en cuanto se descargan.') }),
-    h('p', { className: 'dialog-hint', text: tr('¿Sin servidor? StemLab para Windows separa en tu equipo: lleva Python y '
+    h('p', { className: 'dialog-hint', text: tr('¿Sin servidor? StemLab de escritorio (Windows o Linux) separa en tu equipo: lleva Python y '
       + 'Demucs incluidos.') }));
 
   return new Promise(resolve => {
     openDialog(tr('Servidor de separación'), content, [
       { label: tr('Cancelar'), value: 0 },
-      { label: tr('StemLab para Windows'), value: 2 },
+      { label: tr('StemLab de escritorio'), value: 2 },
       { label: tr('Guardar'), value: 1, primary: true },
     ], async value => {
       if (value === 2)

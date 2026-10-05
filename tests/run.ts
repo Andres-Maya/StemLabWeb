@@ -22,7 +22,7 @@ import { getLanguage, languages, setLanguage, tr, trMatching } from '../src/core
 import { en } from '../src/core/lang/en.ts';
 import { trackColourFor } from '../src/ui/colour.ts';
 import { normaliseServerUrl } from '../src/ai/serverConfig.ts';
-import { installerFromRelease } from '../src/ui/desktopDownload.ts';
+import { detectDesktopPlatform, installerFromRelease, latestInstallerUrl } from '../src/ui/desktopDownload.ts';
 
 let passed = 0, total = 0;
 
@@ -312,7 +312,7 @@ console.log('--- WAV');
 }
 
 //==============================================================================
-console.log('--- Servidor de separación y StemLab para Windows');
+console.log('--- Servidor de separación y StemLab de escritorio');
 {
   check('dirección local sin protocolo: http', normaliseServerUrl(' localhost:8000/ ') === 'http://localhost:8000');
   check('dirección pública sin protocolo: https, sin /api', normaliseServerUrl('separacion.example.com/api/') === 'https://separacion.example.com');
@@ -331,6 +331,22 @@ console.log('--- Servidor de separación y StemLab para Windows');
   check('release sin instalador: nada que descargar', installerFromRelease({ tag_name: 'v0.2.0', assets: [release.assets[0]] }) === null);
   check('respuesta inesperada de la API: nada que descargar', installerFromRelease(null) === null
         && installerFromRelease({ message: 'Not Found' }) === null);
+
+  // Linux: el mismo criterio con su archivo.
+  check('release sin paquete de Linux (la 0.1.0): solo Windows', installerFromRelease(release, 'linux') === null);
+  const both = { ...release, assets: [...release.assets, { name: 'StemLab-Linux-x86_64.tar.gz', browser_download_url: 'https://example.com/linux.tar.gz', size: 400000000 }] };
+  check('release con las dos descargas', installerFromRelease(both, 'linux')?.url === 'https://example.com/linux.tar.gz'
+        && installerFromRelease(both, 'windows')?.url === 'https://example.com/StemLab-Setup.exe');
+  check('enlaces a la última release', latestInstallerUrl('windows').endsWith('/releases/latest/download/StemLab-Setup.exe')
+        && latestInstallerUrl('linux').endsWith('/releases/latest/download/StemLab-Linux-x86_64.tar.gz'));
+  check('se ofrece primero la descarga de la plataforma de quien visita',
+        detectDesktopPlatform('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140.0 Safari/537.36') === 'windows'
+        && detectDesktopPlatform('Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0') === 'linux'
+        && detectDesktopPlatform('Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/537.36 Chrome/140.0 Safari/537.36') === 'linux');
+  check('y ninguna en macOS, Android o iPhone (no hay StemLab de escritorio para ellos)',
+        detectDesktopPlatform('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15') === null
+        && detectDesktopPlatform('Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 Chrome/140.0 Mobile Safari/537.36') === null
+        && detectDesktopPlatform('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148') === null);
 }
 
 //==============================================================================
