@@ -53,7 +53,7 @@ export class Colour {
 export type Theme = 'dark' | 'light';
 
 /** Los mismos colores que las variables de styles.css (lo que se pinta en
-    lienzos no puede leerlas). Mute, solo y grabar no cambian con el tema. */
+    lienzos no puede leerlas). El rojo de grabar no cambia con el tema. */
 const themeColours = {
   dark: {
     background: Colour.hex('#121419'),
@@ -63,21 +63,25 @@ const themeColours = {
     text: Colour.hex('#e4e6eb'),
     textDim: Colour.hex('#8b919c'),
     accent: Colour.hex('#4fc3f7'),
+    mute: Colour.hex('#f0b429'),
+    solo: Colour.hex('#5ccb7a'),
   },
+  // Claro pero sin blancos puros, y con los colores más oscuros que en el
+  // tema oscuro: sobre un fondo claro, los tonos vivos distraen.
   light: {
-    background: Colour.hex('#f2f4f7'),
-    panel: Colour.hex('#ffffff'),
-    panelLight: Colour.hex('#e3e7ee'),
-    outline: Colour.hex('#c8ced9'),
+    background: Colour.hex('#e8ebf0'),
+    panel: Colour.hex('#f4f5f8'),
+    panelLight: Colour.hex('#dbe0e8'),
+    outline: Colour.hex('#b9c1ce'),
     text: Colour.hex('#1b1f27'),
-    textDim: Colour.hex('#5b6472'),
-    accent: Colour.hex('#0b84c9'),
+    textDim: Colour.hex('#566070'),
+    accent: Colour.hex('#0a6aa6'),
+    mute: Colour.hex('#c48a0a'),
+    solo: Colour.hex('#3a9d5b'),
   },
 };
 
 const fixedColours = {
-  mute: Colour.hex('#f0b429'),
-  solo: Colour.hex('#5ccb7a'),
   record: Colour.hex('#e5484d'),
   white: new Colour(255, 255, 255),
   black: new Colour(0, 0, 0),
@@ -108,7 +112,7 @@ export function getPaletteVersion(): number {
 /** El color de una pista tal como se pinta sobre el fondo del tema: los tonos
     pastel del tema oscuro apenas se ven sobre un fondo claro, así que se oscurecen. */
 export function onBackground(colour: Colour): Colour {
-  return paletteTheme === 'light' && !colour.isTransparent() ? colour.darker(0.32) : colour;
+  return paletteTheme === 'light' && !colour.isTransparent() ? colour.darker(0.75) : colour;
 }
 
 // Con el nombre en cualquier idioma de la interfaz (ver core/i18n.ts).

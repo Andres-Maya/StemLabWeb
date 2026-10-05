@@ -27,15 +27,17 @@
 }
 
 :root[data-theme="light"] {
-  --background: #f2f4f7;
-  --panel: #ffffff;
-  --panel-light: #e3e7ee;
-  --outline: #c8ced9;
+  --background: #e8ebf0;
+  --panel: #f4f5f8;
+  --panel-light: #dbe0e8;
+  --outline: #b9c1ce;
   --text: #1b1f27;
-  --text-dim: #5b6472;
-  --accent: #0b84c9;
-  --scroll-thumb: #aab2c0;
-  --scroll-thumb-hover: #8f98a8;
+  --text-dim: #566070;
+  --accent: #0a6aa6;
+  --mute: #c48a0a;
+  --solo: #3a9d5b;
+  --scroll-thumb: #9aa4b4;
+  --scroll-thumb-hover: #808b9d;
   --shadow: rgba(30, 40, 60, 0.25);
   color-scheme: light;
 }
