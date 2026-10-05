@@ -17,7 +17,7 @@
 */
 import { L, tr } from '../core/i18n.ts';
 import type { ClipSource } from '../model/clip.ts';
-import { Colour, DarkPalette } from './colour.ts';
+import { Colour, emphasised, onBackground, Palette } from './colour.ts';
 import { h, prepareCanvas } from './dom.ts';
 
 const twoPi = Math.PI * 2;
@@ -84,6 +84,12 @@ export class SeparationView {
     this.appearedAt = stems.map(() => -1);
     this.present = stems.map(() => true);
     this.presence = stems.map(() => 1);
+  }
+
+  /** El color de la canción tal como se ve sobre el fondo del tema actual
+      (la pantalla se pinta en cada fotograma: sigue al tema al cambiarlo). */
+  private tint(): Colour {
+    return onBackground(this.sourceColour);
   }
 
   /** Audio de la canción que se separa: el tramo [start, start + length) del fragmento. */
@@ -236,7 +242,7 @@ export class SeparationView {
 
   //============================================================================
   paint(g: CanvasRenderingContext2D, width: number, height: number): void {
-    g.fillStyle = DarkPalette.background.toString();
+    g.fillStyle = Palette.background.toString();
     g.fillRect(0, 0, width, height);
 
     const cx = width / 2, cy = height / 2;
@@ -264,7 +270,7 @@ export class SeparationView {
       // Del anillo al borde de la onda: no cruza el porcentaje.
       if (appear > 0 && distance > mainRadius * 1.32 + stemRadius) {
         const from = mainRadius * 1.32 / distance, to = 1 - (stemRadius * 0.95) / distance;
-        this.drawBeam(g, cx + dx * from, cy + dy * from, cx + dx * to, cy + dy * to, this.stems[i].colour, appear, i);
+        this.drawBeam(g, cx + dx * from, cy + dy * from, cx + dx * to, cy + dy * to, onBackground(this.stems[i].colour), appear, i);
       }
     });
 
@@ -277,7 +283,7 @@ export class SeparationView {
   }
 
   private drawCentre(g: CanvasRenderingContext2D, cx: number, cy: number, radius: number): void {
-    fillGlow(g, cx, cy, radius * 2.3, this.sourceColour, 0.18);
+    fillGlow(g, cx, cy, radius * 2.3, this.tint(), 0.18);
     this.drawFrequencyRing(g, cx, cy, radius);
 
     // En el centro, el porcentaje. Mientras no hay porcentaje (cargando el
@@ -291,7 +297,7 @@ export class SeparationView {
     g.textBaseline = 'middle';
 
     // Resplandor del color de la pista detrás del número, y el número en blanco.
-    g.fillStyle = this.sourceColour.withAlpha(0.35).toString();
+    g.fillStyle = this.tint().withAlpha(0.35).toString();
 
     for (const offset of [3, 1.5]) {
       g.fillText(text, cx - offset, cy);
@@ -300,7 +306,7 @@ export class SeparationView {
       g.fillText(text, cx, cy + offset);
     }
 
-    g.fillStyle = DarkPalette.white.toString();
+    g.fillStyle = Palette.highlight.toString();
     g.fillText(text, cx, cy);
   }
 
@@ -331,18 +337,18 @@ export class SeparationView {
     g.lineCap = 'round';
 
     // Resplandor del color de la pista y, encima, la línea blanca fina.
-    g.strokeStyle = this.sourceColour.withAlpha(0.16).toString();
+    g.strokeStyle = this.tint().withAlpha(0.16).toString();
     g.lineWidth = 8;
     g.stroke();
-    g.strokeStyle = this.sourceColour.brighter(0.5).withAlpha(0.45).toString();
+    g.strokeStyle = emphasised(this.tint(), 0.5).withAlpha(0.45).toString();
     g.lineWidth = 3.5;
     g.stroke();
-    g.strokeStyle = DarkPalette.white.withAlpha(0.95).toString();
+    g.strokeStyle = Palette.highlight.withAlpha(0.95).toString();
     g.lineWidth = 1.6;
     g.stroke();
 
     // Puntos brillantes en los picos: máximos locales altos; el mayor, más grande.
-    const dotColour = this.sourceColour.brighter(0.9);
+    const dotColour = emphasised(this.tint(), 0.9);
     let highest = -1;
 
     for (let k = 0; k < ringPoints; ++k) {
@@ -366,7 +372,7 @@ export class SeparationView {
 
     if (highest >= 0 && this.ringLevels[highest] > 0.2) {
       fillGlow(g, xs[highest], ys[highest], 18, dotColour, 0.75);
-      g.fillStyle = DarkPalette.white.toString();
+      g.fillStyle = Palette.highlight.toString();
       g.beginPath();
       g.arc(xs[highest], ys[highest], 3, 0, twoPi);
       g.fill();
@@ -397,7 +403,7 @@ export class SeparationView {
     if (radius <= 0.5)
       return;
 
-    const colour = this.stems[index].colour;
+    const colour = onBackground(this.stems[index].colour);
     const t = this.time + index * 0.7;
     const circle = (r: number) => { g.beginPath(); g.arc(cx, cy, Math.max(0, r), 0, twoPi); };
     const closedCurve = (steps: number, radiusAt: (theta: number) => number, spin: number) => {
@@ -439,7 +445,7 @@ export class SeparationView {
         for (let j = 0; j < 5; ++j) {
           const angle = t * 2.1 + (twoPi * j) / 5;
           const size = radius * (0.14 + 0.06 * Math.sin(t * 3 + j));
-          g.fillStyle = colour.brighter(0.5).withAlpha(alpha).toString();
+          g.fillStyle = emphasised(colour, 0.5).withAlpha(alpha).toString();
           g.beginPath();
           g.arc(cx + radius * 0.95 * Math.cos(angle), cy + radius * 0.95 * Math.sin(angle), size, 0, twoPi);
           g.fill();
@@ -447,7 +453,7 @@ export class SeparationView {
         break;
 
       case 2: {   // arcos que giran en sentidos contrarios
-        g.strokeStyle = colour.brighter(0.3).withAlpha(alpha).toString();
+        g.strokeStyle = emphasised(colour, 0.3).withAlpha(alpha).toString();
         g.lineWidth = 3;
         const start1 = t * 2.4 - Math.PI / 2, start2 = -t * 1.7 - Math.PI / 2;
         g.beginPath();
@@ -463,7 +469,7 @@ export class SeparationView {
         closedCurve(90, theta => radius * (0.78 + 0.14 * Math.sin(6 * theta + t * 5) + 0.06 * Math.sin(11 * theta - t * 3)), t * 0.8);
         g.fillStyle = colour.withAlpha(0.3 * alpha).toString();
         g.fill();
-        g.strokeStyle = colour.brighter(0.4).withAlpha(alpha).toString();
+        g.strokeStyle = emphasised(colour, 0.4).withAlpha(alpha).toString();
         g.lineWidth = 1.8;
         g.stroke();
         break;
@@ -475,7 +481,7 @@ export class SeparationView {
           const theta = (twoPi * k) / 28 + t * 0.6;
           const level = 0.2 + 0.8 * Math.abs(Math.sin(t * 4 + k * 0.9));
           const dx = Math.cos(theta), dy = Math.sin(theta);
-          g.strokeStyle = colour.brighter(0.3).withAlpha(alpha * (0.4 + 0.6 * level)).toString();
+          g.strokeStyle = emphasised(colour, 0.3).withAlpha(alpha * (0.4 + 0.6 * level)).toString();
           g.beginPath();
           g.moveTo(cx + dx * radius * 0.66, cy + dy * radius * 0.66);
           g.lineTo(cx + dx * radius * (0.66 + 0.42 * level), cy + dy * radius * (0.66 + 0.42 * level));
@@ -487,7 +493,7 @@ export class SeparationView {
         closedCurve(120, theta => radius * (0.35 + 0.65 * Math.abs(Math.cos(3 * theta))), t * 1.4);
         g.fillStyle = colour.withAlpha(0.35 * alpha).toString();
         g.fill();
-        g.strokeStyle = colour.brighter(0.4).withAlpha(alpha).toString();
+        g.strokeStyle = emphasised(colour, 0.4).withAlpha(alpha).toString();
         g.lineWidth = 1.5;
         g.stroke();
         break;

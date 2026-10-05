@@ -1,9 +1,8 @@
 /* StemLab Web: los temas de StemLab de escritorio. El oscuro es el de siempre;
    el claro se elige en Ver > Tema (ui/theme.ts pone data-theme en <html>).
-   Los mismos colores están en ui/colour.ts para lo que se pinta en lienzos.
-   La pantalla de ondas de la separación es siempre oscura: repite estas
-   variables en .separation-screen. */
-:root, .separation-screen {
+   Los mismos colores están en ui/colour.ts para lo que se pinta en lienzos
+   (también la pantalla de ondas de la separación, que sigue al tema). */
+:root {
   --background: #121419;
   --panel: #1b1e25;
   --panel-light: #252932;

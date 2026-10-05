@@ -53,7 +53,9 @@ export class Colour {
 export type Theme = 'dark' | 'light';
 
 /** Los mismos colores que las variables de styles.css (lo que se pinta en
-    lienzos no puede leerlas). El rojo de grabar no cambia con el tema. */
+    lienzos no puede leerlas). El rojo de grabar no cambia con el tema.
+    `highlight` es lo más brillante de la pantalla de ondas (el porcentaje y la
+    línea del anillo): blanco sobre el fondo oscuro, casi negro sobre el claro. */
 const themeColours = {
   dark: {
     background: Colour.hex('#121419'),
@@ -65,6 +67,7 @@ const themeColours = {
     accent: Colour.hex('#4fc3f7'),
     mute: Colour.hex('#f0b429'),
     solo: Colour.hex('#5ccb7a'),
+    highlight: Colour.hex('#ffffff'),
   },
   // Claro pero sin blancos puros, y con los colores más oscuros que en el
   // tema oscuro: sobre un fondo claro, los tonos vivos distraen.
@@ -78,6 +81,7 @@ const themeColours = {
     accent: Colour.hex('#0a6aa6'),
     mute: Colour.hex('#c48a0a'),
     solo: Colour.hex('#3a9d5b'),
+    highlight: Colour.hex('#1b1f27'),
   },
 };
 
@@ -87,9 +91,6 @@ const fixedColours = {
   black: new Colour(0, 0, 0),
   transparent: new Colour(0, 0, 0, 0),
 };
-
-/** El tema oscuro, siempre: la pantalla de ondas de la separación no cambia. */
-export const DarkPalette = { ...themeColours.dark, ...fixedColours } as const;
 
 /** Colores del tema actual (cambian con setPaletteTheme). */
 export const Palette = { ...themeColours.dark, ...fixedColours };
@@ -113,6 +114,13 @@ export function getPaletteVersion(): number {
     pastel del tema oscuro apenas se ven sobre un fondo claro, así que se oscurecen. */
 export function onBackground(colour: Colour): Colour {
   return paletteTheme === 'light' && !colour.isTransparent() ? colour.darker(0.75) : colour;
+}
+
+/** Un tono que destaca sobre el propio color (los brillos de la pantalla de
+    ondas): más claro en el tema oscuro y más oscuro en el claro, donde un
+    tono más claro se perdería contra el fondo. */
+export function emphasised(colour: Colour, amount: number): Colour {
+  return paletteTheme === 'light' ? colour.darker(amount * 0.6) : colour.brighter(amount);
 }
 
 // Con el nombre en cualquier idioma de la interfaz (ver core/i18n.ts).
