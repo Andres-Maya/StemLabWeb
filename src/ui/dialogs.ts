@@ -1,4 +1,5 @@
 /** Ventanas modales dentro de la página (avisos, confirmaciones y diálogos propios). */
+import { tr } from '../core/i18n.ts';
 import { h } from './dom.ts';
 
 export interface DialogButton {
@@ -104,7 +105,7 @@ export function showMessage(title: string, message: string, icon: 'warning' | 'i
 }
 
 /** Aceptar / Cancelar. Devuelve true si se acepta. */
-export function showConfirm(title: string, message: string, okLabel: string, cancelLabel = 'Cancelar',
+export function showConfirm(title: string, message: string, okLabel: string, cancelLabel = tr('Cancelar'),
                             danger = false): Promise<boolean> {
   return new Promise(resolve => {
     openDialog(title, message, [

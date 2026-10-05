@@ -2,6 +2,7 @@
     Decodifica un archivo de audio a la frecuencia del motor (el navegador
     remuestrea al decodificar) y lo convierte en un ClipSource estéreo.
 */
+import { tr } from '../core/i18n.ts';
 import { createSource, type ClipSource } from '../model/clip.ts';
 import { toSharedFloat32 } from './memory.ts';
 import { encodeWav } from './wav.ts';
@@ -25,11 +26,11 @@ export async function decodeAudio(context: BaseAudioContext, blob: Blob, name: s
   try {
     decoded = await context.decodeAudioData(bytes);
   } catch {
-    throw new Error('Formato de audio no soportado por este navegador.');
+    throw new Error(tr('Formato de audio no soportado por este navegador.'));
   }
 
   if (decoded.length === 0)
-    throw new Error('El archivo está vacío.');
+    throw new Error(tr('El archivo está vacío.'));
 
   // Un archivo mono suena igual por los dos canales (se comparte el array).
   const left = toSharedFloat32(decoded.getChannelData(0));

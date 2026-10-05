@@ -1,4 +1,5 @@
 /** Diálogo "Exportar / descargar": qué se descarga, en qué formato y con qué nombre. */
+import { msg, tr } from '../core/i18n.ts';
 import type { ExportFormat } from '../export/exporter.ts';
 import { openDialog, type Dialog } from './dialogs.ts';
 import { h } from './dom.ts';
@@ -18,9 +19,9 @@ export interface ExportChoice {
 }
 
 const formatOptions: { label: string; format: ExportFormat; bitrate: number }[] = [
-  { label: 'WAV 24 bits (recomendado)', format: 'wav24', bitrate: 0 },
-  { label: 'WAV 16 bits (calidad CD)', format: 'wav16', bitrate: 0 },
-  { label: 'WAV 32 bits coma flotante', format: 'wav32', bitrate: 0 },
+  { label: msg('WAV 24 bits (recomendado)'), format: 'wav24', bitrate: 0 },
+  { label: msg('WAV 16 bits (calidad CD)'), format: 'wav16', bitrate: 0 },
+  { label: msg('WAV 32 bits coma flotante'), format: 'wav32', bitrate: 0 },
   { label: 'MP3 320 kbps', format: 'mp3', bitrate: 320 },
   { label: 'MP3 192 kbps', format: 'mp3', bitrate: 192 },
   { label: 'MP3 128 kbps', format: 'mp3', bitrate: 128 },
@@ -34,7 +35,7 @@ export function showExportDialog(scopes: ExportScope[], initialScope: string): P
   scopeSelect.value = scopes.some(s => s.id === initialScope) ? initialScope : scopes[0].id;
 
   const formatSelect = h('select', { className: 'field', id: 'export-format' });
-  formatOptions.forEach((f, i) => formatSelect.append(h('option', { value: String(i), text: f.label })));
+  formatOptions.forEach((f, i) => formatSelect.append(h('option', { value: String(i), text: tr(f.label) })));
   formatSelect.value = String(lastFormat);
 
   const nameInput = h('input', { className: 'field', id: 'export-name', type: 'text', spellcheck: 'false' });
@@ -50,10 +51,10 @@ export function showExportDialog(scopes: ExportScope[], initialScope: string): P
 
     extension.textContent = current.zip ? '.zip' : formatOptions[Number(formatSelect.value)].format === 'mp3' ? '.mp3' : '.wav';
     hint.textContent = current.id === 'mix'
-      ? 'Se descarga la mezcla completa tal como suena: volumen, paneo, mute, solo, efectos y volumen master.'
+      ? tr('Se descarga la mezcla completa tal como suena: volumen, paneo, mute, solo, efectos y volumen master.')
       : current.zip
-        ? 'Cada pista en su propio archivo, desde el principio hasta el final del proyecto (así quedan alineadas), con sus efectos, volumen y paneo.'
-        : 'La pista sola, desde el principio del proyecto hasta su último fragmento, con sus efectos, volumen y paneo.';
+        ? tr('Cada pista en su propio archivo, desde el principio hasta el final del proyecto (así quedan alineadas), con sus efectos, volumen y paneo.')
+        : tr('La pista sola, desde el principio del proyecto hasta su último fragmento, con sus efectos, volumen y paneo.');
   };
 
   scopeSelect.addEventListener('change', () => updateScope(true));
@@ -61,17 +62,17 @@ export function showExportDialog(scopes: ExportScope[], initialScope: string): P
   updateScope(true);
 
   const content = h('div', { className: 'form' },
-    h('label', { className: 'form-row', for: 'export-scope' }, h('span', { text: 'Qué' }), scopeSelect),
-    h('label', { className: 'form-row', for: 'export-format' }, h('span', { text: 'Formato' }), formatSelect),
-    h('label', { className: 'form-row', for: 'export-name' }, h('span', { text: 'Nombre' }),
+    h('label', { className: 'form-row', for: 'export-scope' }, h('span', { text: tr('Qué') }), scopeSelect),
+    h('label', { className: 'form-row', for: 'export-format' }, h('span', { text: tr('Formato') }), formatSelect),
+    h('label', { className: 'form-row', for: 'export-name' }, h('span', { text: tr('Nombre') }),
       h('div', { className: 'field-with-suffix' }, nameInput, extension)),
     hint,
-    h('p', { className: 'dialog-hint', text: 'El archivo se guarda en la carpeta de descargas del navegador. Nada se sube a la nube.' }));
+    h('p', { className: 'dialog-hint', text: tr('El archivo se guarda en la carpeta de descargas del navegador. Nada se sube a la nube.') }));
 
   return new Promise(resolve => {
-    openDialog('Exportar / descargar', content, [
-      { label: 'Cancelar', value: 0 },
-      { label: 'Descargar', value: 1, primary: true },
+    openDialog(tr('Exportar / descargar'), content, [
+      { label: tr('Cancelar'), value: 0 },
+      { label: tr('Descargar'), value: 1, primary: true },
     ], value => {
       if (value !== 1) {
         resolve(null);
@@ -97,7 +98,7 @@ export class ProgressDialog {
   constructor(title: string, message: string, onCancel: () => void) {
     const content = h('div', {}, h('p', { text: message }),
       h('div', { className: 'progress-bar' }, this.bar), this.text);
-    this.dialog = openDialog(title, content, [{ label: 'Cancelar', value: 0 }], value => {
+    this.dialog = openDialog(title, content, [{ label: tr('Cancelar'), value: 0 }], value => {
       if (value === 0)
         onCancel();
     });

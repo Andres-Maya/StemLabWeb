@@ -6,6 +6,7 @@ import ExportWorker from './export.worker.ts?worker';
 import type { AudioTrack } from '../model/track.ts';
 import type { SourceData, TrackState } from '../dsp/mixerCore.ts';
 import { safeFileName } from '../audio/decode.ts';
+import { msg } from '../core/i18n.ts';
 import type { ExportFormat, ExportJob, ExportRequest, ExportResult, FromExportWorker } from './exportTypes.ts';
 
 export type { ExportFormat, ExportResult };
@@ -57,7 +58,7 @@ export function startExport(files: ExportFile[], options: { sampleRate: number; 
     };
 
     worker.onerror = event => {
-      resolve({ ok: false, cancelled: false, error: event.message || 'Error al exportar.', blob: null, fileName: '',
+      resolve({ ok: false, cancelled: false, error: event.message || msg('Error al exportar.'), blob: null, fileName: '',
                 peak: 0, clipped: false, seconds: 0 });
       worker.terminate();
     };

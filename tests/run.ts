@@ -17,7 +17,10 @@ import type { AudioEngine } from '../src/audio/engine.ts';
 import { encodeWav } from '../src/audio/wav.ts';
 import { Parameter } from '../src/core/parameter.ts';
 import { NormalisableRange } from '../src/core/range.ts';
-import { formatTime } from '../src/core/strings.ts';
+import { formatTime, stemDisplayName } from '../src/core/strings.ts';
+import { getLanguage, languages, setLanguage, tr, trMatching } from '../src/core/i18n.ts';
+import { en } from '../src/core/lang/en.ts';
+import { trackColourFor } from '../src/ui/colour.ts';
 import { normaliseServerUrl } from '../src/ai/serverConfig.ts';
 import { installerFromRelease } from '../src/ui/desktopDownload.ts';
 
@@ -328,6 +331,50 @@ console.log('--- Servidor de separación y StemLab para Windows');
   check('release sin instalador: nada que descargar', installerFromRelease({ tag_name: 'v0.2.0', assets: [release.assets[0]] }) === null);
   check('respuesta inesperada de la API: nada que descargar', installerFromRelease(null) === null
         && installerFromRelease({ message: 'Not Found' }) === null);
+}
+
+//==============================================================================
+console.log('--- Idiomas');
+{
+  // Los textos de la interfaz salen del propio código: tr('...'), L('...') y msg('...').
+  const specifier = './i18nKeys.mjs';
+  const { collectInterfaceTexts } = await import(specifier) as { collectInterfaceTexts(directory: string): string[] };
+  const texts = collectInterfaceTexts(decodeURIComponent(new URL('../src', import.meta.url).pathname).replace(/^\/([A-Za-z]:)/, '$1'));
+  const placeholders = (text: string) => [...text.matchAll(/\{\d+\}/g)].map(m => m[0]).sort().join();
+
+  check('se encuentran los textos de la interfaz', texts.length > 300, String(texts.length));
+
+  for (const [name, dictionary] of [['en', en]] as const) {
+    const missing = texts.filter(text => dictionary[text] === undefined);
+    check(`${name}: todos los textos tienen traducción`, missing.length === 0, missing.slice(0, 5).join(' | '));
+
+    const unused = Object.keys(dictionary).filter(key => !texts.includes(key));
+    check(`${name}: no sobran traducciones de textos que ya no existen`, unused.length === 0, unused.slice(0, 5).join(' | '));
+
+    const different = Object.entries(dictionary).filter(([key, value]) => placeholders(key) !== placeholders(value)).map(([key]) => key);
+    check(`${name}: cada traducción usa los mismos {n} que su texto`, different.length === 0, different.slice(0, 3).join(' | '));
+
+    const lines = Object.entries(dictionary).filter(([key, value]) => key.split('\n').length !== value.split('\n').length).map(([key]) => key);
+    check(`${name}: mismos saltos de línea (párrafos de los diálogos)`, lines.length === 0, lines.slice(0, 3).join(' | '));
+  }
+
+  check('por defecto, español: el texto del código', getLanguage() === 'es' && tr('Añadir pista') === 'Añadir pista');
+  check('datos variables', tr('Pista "{0}" eliminada. Ctrl+Z la recupera.', 'Voz') === 'Pista "Voz" eliminada. Ctrl+Z la recupera.');
+
+  setLanguage('en');
+  check('inglés', tr('Añadir pista') === 'Add track' && tr('{0} pistas', 4) === '4 tracks');
+  check('un texto sin traducción se queda como está', tr('Mi canción') === 'Mi canción');
+  check('los stems, en el idioma elegido', stemDisplayName('vocals') === 'Vocals' && stemDisplayName('drums') === 'Drums');
+  check('los mensajes del servidor se traducen por su plantilla',
+        trMatching('Cargando modelo htdemucs en cpu (la primera vez se descarga)...',
+                   ['Leyendo {0}...', 'Cargando modelo {0} en {1} (la primera vez se descarga)...'])
+          === 'Loading model htdemucs on cpu (it is downloaded the first time)...'
+        && trMatching('Algo que el servidor no avisó', ['Leyendo {0}...']) === 'Algo que el servidor no avisó');
+  check('las pistas conservan su color en cualquier idioma',
+        trackColourFor('Vocals', 3).equals(trackColourFor('Voz', 0)) && trackColourFor('Recording 2', 1).equals(trackColourFor('Grabación', 0)));
+
+  setLanguage('es');
+  check('todos los idiomas tienen nombre', languages.every(language => language.name !== ''));
 }
 
 console.log(`\nRESULTADO: ${passed}/${total}`);

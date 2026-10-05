@@ -6,6 +6,7 @@
     al crear una versión. La web consulta cuál es la última, así que no hay que
     tocarla al publicar una versión nueva.
 */
+import { tr } from '../core/i18n.ts';
 import { openDialog } from './dialogs.ts';
 import { h } from './dom.ts';
 
@@ -66,22 +67,22 @@ function latestInstaller(): Promise<Lookup> {
 
 /** Explica qué es StemLab para Windows y descarga su instalador. */
 export function showDesktopDownloadDialog(): void {
-  const status = h('p', { className: 'dialog-hint', role: 'status', text: 'Buscando la última versión...' });
+  const status = h('p', { className: 'dialog-hint', role: 'status', text: tr('Buscando la última versión...') });
   const content = h('div', {},
-    h('p', { text: 'StemLab para Windows es la versión de escritorio: la misma mini-DAW, instalada en tu equipo.' }),
+    h('p', { text: tr('StemLab para Windows es la versión de escritorio: la misma mini-DAW, instalada en tu equipo.') }),
     h('ul', { className: 'feature-list' },
-      h('li', { text: 'Separa los instrumentos sin servidor: lleva Python y Demucs incluidos.' }),
-      h('li', { text: 'Guarda y abre proyectos (.stemlab) con todo su audio.' }),
-      h('li', { text: 'Graba con tu tarjeta de sonido en modo RAW, sin los efectos de Windows.' })),
-    h('p', { className: 'dialog-hint', text: 'Windows 10 u 11 de 64 bits. Se instala solo para tu usuario, sin permisos de '
+      h('li', { text: tr('Separa los instrumentos sin servidor: lleva Python y Demucs incluidos.') }),
+      h('li', { text: tr('Guarda y abre proyectos (.stemlab) con todo su audio.') }),
+      h('li', { text: tr('Graba con tu tarjeta de sonido en modo RAW, sin los efectos de Windows.') })),
+    h('p', { className: 'dialog-hint', text: tr('Windows 10 u 11 de 64 bits. Se instala solo para tu usuario, sin permisos de '
       + 'administrador. Como el instalador no está firmado, Windows puede avisar: pulsa «Más información» y «Ejecutar de '
-      + 'todas formas».' }),
+      + 'todas formas».') }),
     status);
 
   let url = latestInstallerUrl;
-  const dialog = openDialog('StemLab para Windows', content, [
-    { label: 'Cancelar', value: 0 },
-    { label: 'Descargar el instalador', value: 1, primary: true },
+  const dialog = openDialog(tr('StemLab para Windows'), content, [
+    { label: tr('Cancelar'), value: 0 },
+    { label: tr('Descargar el instalador'), value: 1, primary: true },
   ], value => {
     // En otra pestaña: la descarga no cierra esta sesión (ni pide confirmarlo).
     if (value === 1 && !download.disabled)
@@ -94,13 +95,13 @@ export function showDesktopDownloadDialog(): void {
     if (result.state === 'available') {
       const { version, sizeBytes } = result.release;
       url = result.release.url;
-      status.textContent = `Versión ${version}` + (sizeBytes > 0 ? ` · ${Math.round(sizeBytes / 1048576)} MB` : '') + ' · StemLab-Setup.exe';
+      status.textContent = tr('Versión {0}', version) + (sizeBytes > 0 ? ` · ${Math.round(sizeBytes / 1048576)} MB` : '') + ' · StemLab-Setup.exe';
     } else if (result.state === 'none') {
       download.disabled = true;
-      download.textContent = 'Aún no disponible';
-      status.textContent = 'Todavía no hay ninguna versión publicada para descargar.';
+      download.textContent = tr('Aún no disponible');
+      status.textContent = tr('Todavía no hay ninguna versión publicada para descargar.');
     } else {
-      status.textContent = 'No se pudo comprobar la última versión: se descargará la más reciente publicada.';
+      status.textContent = tr('No se pudo comprobar la última versión: se descargará la más reciente publicada.');
     }
   });
 }

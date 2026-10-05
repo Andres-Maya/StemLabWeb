@@ -3,6 +3,7 @@
     (volumen, paneo, mute, solo) + cadena de efectos. El audio de los clips ya
     está decodificado en memoria (ClipSource).
 */
+import { msg } from '../core/i18n.ts';
 import { Parameter } from '../core/parameter.ts';
 import { NormalisableRange } from '../core/range.ts';
 import { EFFECT_DEFS, type EffectsState } from '../dsp/effectDefs.ts';
@@ -31,8 +32,8 @@ export class AudioTrack {
   stemGroup = '';
   stemId = '';
 
-  readonly volume = Parameter.continuous('volume', 'Volumen', new NormalisableRange(-60, 12, 0.1, 2), 0, 'dB');
-  readonly pan = Parameter.continuous('pan', 'Paneo', new NormalisableRange(-1, 1, 0.01), 0);
+  readonly volume = Parameter.continuous('volume', msg('Volumen'), new NormalisableRange(-60, 12, 0.1, 2), 0, 'dB');
+  readonly pan = Parameter.continuous('pan', msg('Paneo'), new NormalisableRange(-1, 1, 0.01), 0);
   readonly mute = Parameter.toggle('mute', 'Mute', false);
   readonly solo = Parameter.toggle('solo', 'Solo', false);
   readonly effects: EffectModel[];
@@ -50,7 +51,7 @@ export class AudioTrack {
     this.effects = EFFECT_DEFS.map(def => ({
       id: def.id,
       name: def.name,
-      enabled: Parameter.toggle('enabled', 'Activo', def.enabledByDefault),
+      enabled: Parameter.toggle('enabled', msg('Activo'), def.enabledByDefault),
       params: def.params.map(p => Parameter.fromDef(p)),
     }));
   }

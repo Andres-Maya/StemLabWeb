@@ -4,6 +4,7 @@
     gestiona el micrófono y la grabación.
 */
 import workletUrl from './engine.worklet.ts?worker&url';
+import { msg, tr } from '../core/i18n.ts';
 import { Parameter } from '../core/parameter.ts';
 import { NormalisableRange } from '../core/range.ts';
 import type { ClipSource } from '../model/clip.ts';
@@ -21,7 +22,7 @@ export interface RecordingInfo {
 
 type SinkContext = AudioContext & { setSinkId?: (id: string) => Promise<void>; sinkId?: string };
 
-const defaultOutputName = 'predeterminada del sistema';
+const defaultOutputName = msg('predeterminada del sistema');     // se traduce al mostrarla
 
 export class AudioEngine {
   readonly context: SinkContext;
@@ -30,7 +31,7 @@ export class AudioEngine {
   readonly ready: Promise<void>;
   initError = '';
 
-  readonly inputGain = Parameter.continuous('inputGain', 'Entrada', new NormalisableRange(0, 40, 0.5), 18, 'dB');
+  readonly inputGain = Parameter.continuous('inputGain', msg('Entrada'), new NormalisableRange(0, 40, 0.5), 18, 'dB');
   readonly masterVolume = Parameter.continuous('masterVolume', 'Master', new NormalisableRange(-60, 6, 0.1, 2), 0, 'dB');
 
   // Transporte (reflejo del hilo de audio)
@@ -350,7 +351,7 @@ export class AudioEngine {
     await this.context.setSinkId!(deviceId);
     this.outputDeviceId = deviceId;
     this.outputName = deviceId === '' ? defaultOutputName
-      : (await this.listDevices()).outputs.find(d => d.deviceId === deviceId)?.label || 'dispositivo elegido';
+      : (await this.listDevices()).outputs.find(d => d.deviceId === deviceId)?.label || msg('dispositivo elegido');
   }
 
   async listDevices(): Promise<{ inputs: MediaDeviceInfo[]; outputs: MediaDeviceInfo[] }> {
@@ -392,7 +393,7 @@ export class AudioEngine {
     await this.ready;
 
     if (this.node === null)
-      return 'El motor de audio no está disponible en este navegador.';
+      return tr('El motor de audio no está disponible en este navegador.');
 
     if (this.micStream === null) {
       try {
@@ -400,8 +401,8 @@ export class AudioEngine {
       } catch (error) {
         const name = error instanceof DOMException ? error.name : '';
         return name === 'NotAllowedError' || name === 'SecurityError'
-          ? 'El navegador no tiene permiso para usar el micrófono.\n\nPermítelo en el icono del candado de la barra de direcciones y vuelve a pulsar R.'
-          : 'No se encontró ningún micrófono.\n\nConecta uno o elígelo en Audio > Configuración de audio.';
+          ? tr('El navegador no tiene permiso para usar el micrófono.\n\nPermítelo en el icono del candado de la barra de direcciones y vuelve a pulsar R.')
+          : tr('No se encontró ningún micrófono.\n\nConecta uno o elígelo en Audio > Configuración de audio.');
       }
     }
 

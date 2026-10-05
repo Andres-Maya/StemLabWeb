@@ -7,6 +7,7 @@
     nuevo aparece aquí sin escribir UI específica.
 */
 import type { AudioEngine } from '../audio/engine.ts';
+import { L, tr } from '../core/i18n.ts';
 import type { AudioTrack, EffectModel } from '../model/track.ts';
 import { choiceBox, Knob, LevelMeter, LinearSlider, tickBox } from './controls.ts';
 import { h } from './dom.ts';
@@ -25,9 +26,9 @@ class EffectPanel {
     for (const parameter of effect.params) {
       if (parameter.kind === 'choice') {
         grid.append(h('div', { className: 'effect-control' },
-          h('div', { className: 'control-label', text: parameter.name }), choiceBox(parameter)));
+          h('div', { className: 'control-label', text: tr(parameter.name) }), choiceBox(parameter)));
       } else {
-        const knob = new Knob(parameter, { size: 46, textBox: true, label: parameter.name });
+        const knob = new Knob(parameter, { size: 46, textBox: true, label: tr(parameter.name) });
         this.knobs.push(knob);
         grid.append(h('div', { className: 'effect-control' }, knob.element));
       }
@@ -35,8 +36,8 @@ class EffectPanel {
 
     this.element = h('div', { className: 'effect-panel' },
       h('div', { className: 'effect-header' },
-        h('div', { className: 'effect-name', text: effect.name }),
-        tickBox(effect.enabled, 'Activar / desactivar')),
+        h('div', { className: 'effect-name', text: tr(effect.name) }),
+        tickBox(effect.enabled, tr('Activar / desactivar'))),
       grid);
 
     this.element.style.width = `${Math.max(110, columns * 68 + 16)}px`;
@@ -54,7 +55,7 @@ class EffectPanel {
 }
 
 export class MixerView {
-  readonly element = h('section', { className: 'mixer', 'aria-label': 'Mezclador' });
+  readonly element = h('section', { className: 'mixer', 'aria-label': L('Mezclador') });
   private title = h('div', { className: 'mixer-track-name' });
   private rack = h('div', { className: 'mixer-rack' });
   private track: AudioTrack | null = null;
@@ -62,8 +63,14 @@ export class MixerView {
 
   constructor(engine: AudioEngine) {
     this.engine = engine;
-    this.element.append(h('div', { className: 'mixer-title' }, h('span', { text: 'MEZCLADOR' }), this.title), this.rack);
+    this.element.append(h('div', { className: 'mixer-title' }, h('span', { text: L('MEZCLADOR') }), this.title), this.rack);
     this.setTrack(null);
+  }
+
+  /** Vuelve a construir los controles (cambió el idioma o el tema). */
+  rebuild(): void {
+    this.rack.replaceChildren();
+    this.setTrack(this.track);
   }
 
   setTrack(track: AudioTrack | null): void {
@@ -75,7 +82,7 @@ export class MixerView {
     this.updateName();
 
     if (track === null) {
-      this.rack.append(h('div', { className: 'mixer-empty', text: 'Selecciona una pista para ver su canal y sus efectos.' }));
+      this.rack.append(h('div', { className: 'mixer-empty', text: tr('Selecciona una pista para ver su canal y sus efectos.') }));
       return;
     }
 
@@ -85,8 +92,8 @@ export class MixerView {
     meter.element.classList.add('strip-meter');
 
     this.rack.append(h('div', { className: 'channel-strip' },
-      h('div', { className: 'strip-column' }, h('div', { className: 'control-label', text: 'Volumen' }), volume.element),
-      h('div', { className: 'strip-column' }, h('div', { className: 'control-label', text: 'Paneo' }), pan.element),
+      h('div', { className: 'strip-column' }, h('div', { className: 'control-label', text: tr('Volumen') }), volume.element),
+      h('div', { className: 'strip-column' }, h('div', { className: 'control-label', text: tr('Paneo') }), pan.element),
       meter.element));
 
     for (const effect of track.effects)

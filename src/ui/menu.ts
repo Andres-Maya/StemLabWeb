@@ -1,4 +1,5 @@
 /** Menús: la barra de menús de la aplicación y los menús emergentes (clic derecho). */
+import type { Localised } from '../core/i18n.ts';
 import { h } from './dom.ts';
 
 export type MenuEntry =
@@ -161,7 +162,7 @@ export class MenuBar {
   private open = -1;
   private getMenu: (index: number) => MenuEntry[];
 
-  constructor(names: string[], getMenu: (index: number) => MenuEntry[]) {
+  constructor(names: Localised[], getMenu: (index: number) => MenuEntry[]) {
     this.getMenu = getMenu;
 
     names.forEach((name, index) => {

@@ -5,6 +5,7 @@
     puede seguir escuchando o editando mientras exporta.
 */
 import { Mp3Encoder } from '@breezystack/lamejs';
+import { msg } from '../core/i18n.ts';
 import { zipSync } from 'fflate';
 import { MixerCore, type SourceData } from '../dsp/mixerCore.ts';
 import { encodeWavFrames, wavHeader, type WavFormat } from '../audio/wav.ts';
@@ -195,7 +196,8 @@ async function run(request: ExportRequest): Promise<void> {
 
   try {
     if (request.jobs.length === 0 || request.jobs.every(j => j.length <= 0))
-      throw new Error('No hay nada que exportar: el proyecto no tiene audio.');
+      // El worker no conoce el idioma elegido: lo traduce quien muestra el error.
+      throw new Error(msg('No hay nada que exportar: el proyecto no tiene audio.'));
 
     const files: { name: string; blob: Blob }[] = [];
     const count = request.jobs.length;
@@ -232,7 +234,7 @@ async function run(request: ExportRequest): Promise<void> {
   } catch (error) {
     if (error instanceof Cancelled) {
       result.cancelled = true;
-      result.error = 'Exportación cancelada.';
+      result.error = msg('Exportación cancelada.');
     } else {
       result.error = error instanceof Error ? error.message : String(error);
     }

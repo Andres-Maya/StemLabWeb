@@ -7,6 +7,7 @@
     vez, con progreso y estado que la interfaz consulta, y un callback al
     terminar.
 */
+import { msg, tr, trMatching } from '../core/i18n.ts';
 import { stemSortOrder } from '../core/strings.ts';
 import { apiUrl, getSeparationServer, isLocalPage } from './serverConfig.ts';
 
@@ -17,9 +18,9 @@ export interface ModelInfo {
 }
 
 export const MODELS: ModelInfo[] = [
-  { id: 'htdemucs', description: '4 pistas: voz, batería, bajo y otros (recomendado)', stems: ['vocals', 'drums', 'bass', 'other'] },
-  { id: 'htdemucs_ft', description: '4 pistas, más calidad (unas 4 veces más lento)', stems: ['vocals', 'drums', 'bass', 'other'] },
-  { id: 'htdemucs_6s', description: '6 pistas: añade guitarra y piano (experimental)',
+  { id: 'htdemucs', description: msg('4 pistas: voz, batería, bajo y otros (recomendado)'), stems: ['vocals', 'drums', 'bass', 'other'] },
+  { id: 'htdemucs_ft', description: msg('4 pistas, más calidad (unas 4 veces más lento)'), stems: ['vocals', 'drums', 'bass', 'other'] },
+  { id: 'htdemucs_6s', description: msg('6 pistas: añade guitarra y piano (experimental)'),
     stems: ['vocals', 'drums', 'bass', 'guitar', 'piano', 'other'] },
 ];
 
@@ -44,20 +45,40 @@ type ServerEvent =
   | { type: 'error'; message: string }
   | { type: 'cancelled' };
 
+/** Los mensajes que envía el servidor (stemlab_server.py y stemlab_separate.py
+    los escriben en español): con estas plantillas se muestran en el idioma elegido. */
+const serverMessages = [
+  msg('En cola: hay otra separación en marcha...'),
+  msg('Iniciando Python...'),
+  msg('Cargando PyTorch...'),
+  msg('Cargando modelo {0} en {1} (la primera vez se descarga)...'),
+  msg('Leyendo {0}...'),
+  msg('Separando instrumentos ({0})...'),
+  msg('Guardando pistas...'),
+  msg('El modelo terminó pero no generó ningún stem.'),
+  msg('No se recibió ningún audio.'),
+  msg('El archivo es demasiado grande (máximo 1 GB).'),
+  msg('La separación no existe (quizá ya se borró).'),
+  msg('Modelo desconocido: {0}'),
+  msg('No se pudo ejecutar Python ({0}): {1}'),
+  msg('Python terminó con código {0}:\n\n{1}'),
+];
+
 /** Qué hacer cuando no se puede conectar con el servidor de separación. */
 function serverHelp(server: string): string {
-  const start = 'La separación por IA la hace Demucs (Python + PyTorch) en el servidor de StemLab Web, '
-              + 'que no puede ejecutarse dentro del navegador ni en Vercel. Ponlo en marcha con el Python '
-              + 'que tiene Demucs instalado:\n\n    python server/stemlab_server.py';
-  const desktop = '\n\nO instala StemLab para Windows (Ayuda > Descargar StemLab para Windows): separa en tu equipo, sin servidor.';
+  const start = tr('La separación por IA la hace Demucs (Python + PyTorch) en el servidor de StemLab Web, '
+                   + 'que no puede ejecutarse dentro del navegador ni en Vercel. Ponlo en marcha con el Python '
+                   + 'que tiene Demucs instalado:') + '\n\n    python server/stemlab_server.py';
+  const desktop = '\n\n' + tr('O instala StemLab para Windows (Ayuda > Descargar StemLab para Windows): separa en tu equipo, sin servidor.');
 
   if (server === '' && !isLocalPage())
-    return 'Esta web no tiene un servidor de separación configurado.\n\n' + start
-         + '\n\nDespués escribe su dirección en IA > Servidor de separación... '
-         + '(http://localhost:8000 si lo has arrancado en este equipo).' + desktop;
+    return tr('Esta web no tiene un servidor de separación configurado.') + '\n\n' + start + '\n\n'
+         + tr('Después escribe su dirección en IA > Servidor de separación... '
+              + '(http://localhost:8000 si lo has arrancado en este equipo).') + desktop;
 
-  return `No se pudo conectar con el servidor de separación${server !== '' ? ' (' + server + ')' : ''}.\n\n` + start
-       + '\n\nSi está en otra dirección, cámbiala en IA > Servidor de separación... (ver README.md).' + desktop;
+  return (server !== '' ? tr('No se pudo conectar con el servidor de separación ({0}).', server)
+                        : tr('No se pudo conectar con el servidor de separación.')) + '\n\n' + start + '\n\n'
+       + tr('Si está en otra dirección, cámbiala en IA > Servidor de separación... (ver README.md).') + desktop;
 }
 
 export class SeparationManager {
@@ -95,7 +116,7 @@ export class SeparationManager {
     this.busy = true;
     this.cancelled = false;
     this.progress = -1;
-    this.status = 'Subiendo la canción al servidor de separación...';
+    this.status = tr('Subiendo la canción al servidor de separación...');
     this.jobId = '';
     this.onFinished = onFinished;
     this.server = getSeparationServer();
@@ -107,11 +128,11 @@ export class SeparationManager {
 
     request.upload.onprogress = event => {
       if (event.lengthComputable && event.total > 0)
-        this.status = `Subiendo la canción al servidor de separación... ${Math.round((event.loaded / event.total) * 100)} %`;
+        this.status = tr('Subiendo la canción al servidor de separación... {0} %', Math.round((event.loaded / event.total) * 100));
     };
 
     request.onerror = () => this.finishUnavailable();
-    request.onabort = () => this.finish({ ok: false, cancelled: true, error: 'Separación cancelada.', stems: [] });
+    request.onabort = () => this.finish({ ok: false, cancelled: true, error: tr('Separación cancelada.'), stems: [] });
 
     request.onload = () => {
       this.upload = null;
@@ -122,13 +143,14 @@ export class SeparationManager {
         if ([0, 404, 502, 504].includes(request.status))
           this.finishUnavailable();
         else
-          this.finish({ ok: false, cancelled: false, error: body?.error ?? `El servidor respondió ${request.status}.`, stems: [] });
+          this.finish({ ok: false, cancelled: false, error: body?.error !== undefined ? trMatching(body.error, serverMessages)
+                                                                              : tr('El servidor respondió {0}.', request.status), stems: [] });
 
         return;
       }
 
       this.jobId = body.id;
-      this.status = 'Iniciando Python...';
+      this.status = tr('Iniciando Python...');
       this.follow(body.id);
     };
 
@@ -146,7 +168,7 @@ export class SeparationManager {
 
       switch (event.type) {
         case 'status':
-          this.status = event.message;
+          this.status = trMatching(event.message, serverMessages);
           break;
         case 'progress':
           this.progress = event.value;
@@ -160,12 +182,12 @@ export class SeparationManager {
           finished = true;
           source.close();
           this.forget();
-          this.finish({ ok: false, cancelled: false, error: event.message, stems: [] });
+          this.finish({ ok: false, cancelled: false, error: trMatching(event.message, serverMessages), stems: [] });
           break;
         case 'cancelled':
           finished = true;
           source.close();
-          this.finish({ ok: false, cancelled: true, error: 'Separación cancelada.', stems: [] });
+          this.finish({ ok: false, cancelled: true, error: tr('Separación cancelada.'), stems: [] });
           break;
       }
     };
@@ -189,7 +211,7 @@ export class SeparationManager {
   }
 
   private async downloadStems(stems: { name: string; url: string }[]): Promise<void> {
-    this.status = 'Descargando las pistas...';
+    this.status = tr('Descargando las pistas...');
     this.progress = 1;
     this.downloads = new AbortController();
 
@@ -200,7 +222,7 @@ export class SeparationManager {
         const response = await fetch(this.url(stem.url), { signal: this.downloads.signal });
 
         if (!response.ok)
-          throw new Error(`No se pudo descargar el stem "${stem.name}" (${response.status}).`);
+          throw new Error(tr('No se pudo descargar el stem "{0}" ({1}).', stem.name, response.status));
 
         result.push({ name: stem.name, blob: await response.blob() });
       }
@@ -212,7 +234,7 @@ export class SeparationManager {
       this.forget();
 
       if (this.cancelled)
-        this.finish({ ok: false, cancelled: true, error: 'Separación cancelada.', stems: [] });
+        this.finish({ ok: false, cancelled: true, error: tr('Separación cancelada.'), stems: [] });
       else
         this.finish({ ok: false, cancelled: false, error: error instanceof Error ? error.message : String(error), stems: [] });
     }
@@ -241,7 +263,7 @@ export class SeparationManager {
       return;
 
     this.cancelled = true;
-    this.status = 'Cancelando...';
+    this.status = tr('Cancelando...');
 
     if (this.upload !== null) {
       this.upload.abort();
@@ -251,7 +273,7 @@ export class SeparationManager {
     this.downloads?.abort();
     this.events?.close();
     this.forget();
-    this.finish({ ok: false, cancelled: true, error: 'Separación cancelada.', stems: [] });
+    this.finish({ ok: false, cancelled: true, error: tr('Separación cancelada.'), stems: [] });
   }
 
   private finish(result: SeparationResult): void {

@@ -1,5 +1,9 @@
-/* StemLab Web: el tema oscuro de StemLab de escritorio. */
-:root {
+/* StemLab Web: los temas de StemLab de escritorio. El oscuro es el de siempre;
+   el claro se elige en Ver > Tema (ui/theme.ts pone data-theme en <html>).
+   Los mismos colores están en ui/colour.ts para lo que se pinta en lienzos.
+   La pantalla de ondas de la separación es siempre oscura: repite estas
+   variables en .separation-screen. */
+:root, .separation-screen {
   --background: #121419;
   --panel: #1b1e25;
   --panel-light: #252932;
@@ -7,12 +11,33 @@
   --text: #e4e6eb;
   --text-dim: #8b919c;
   --accent: #4fc3f7;
+  --scroll-thumb: #555c6b;
+  --scroll-thumb-hover: #666e7e;
+  --shadow: rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+:root {
   --mute: #f0b429;
   --solo: #5ccb7a;
   --record: #e5484d;
+  --on-text: #121419;          /* texto sobre un botón activado (M, S, Ondas) */
   --header-width: 250px;
   --mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", Menlo, monospace;
-  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --background: #f2f4f7;
+  --panel: #ffffff;
+  --panel-light: #e3e7ee;
+  --outline: #c8ced9;
+  --text: #1b1f27;
+  --text-dim: #5b6472;
+  --accent: #0b84c9;
+  --scroll-thumb: #aab2c0;
+  --scroll-thumb-hover: #8f98a8;
+  --shadow: rgba(30, 40, 60, 0.25);
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -76,27 +101,32 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
 
 .menubar-name:hover, .menubar-name.open { background: var(--panel-light); }
 
-/* StemLab para Windows: descarga del instalador de escritorio (ui/desktopDownload.ts). */
-.desktop-download {
-  margin-left: auto;
-  margin-right: 8px;
+/* A la derecha del menú: tema, idioma y StemLab para Windows (la descarga del
+   instalador de escritorio, ui/desktopDownload.ts). */
+.header-tools { margin-left: auto; margin-right: 8px; flex: none; display: flex; align-items: center; gap: 6px; }
+
+.header-button {
   flex: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   height: 22px;
+  min-width: 34px;
   padding: 0 10px;
   border-radius: 11px;
   border: 1px solid var(--outline);
   background: var(--panel-light);
   color: var(--text);
   font-size: 12px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
-.desktop-download:hover { border-color: var(--accent); }
-
-.desktop-download svg { width: 12px; height: 12px; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.header-button.icon { padding: 0; width: 28px; min-width: 0; }
+.header-button:hover { border-color: var(--accent); }
+.header-button svg { width: 12px; height: 12px; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.desktop-download { font-weight: 400; }
 
 .feature-list { margin: 0 0 10px; padding-left: 20px; }
 .feature-list li { margin-bottom: 4px; }
@@ -112,7 +142,7 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
   border: 1px solid var(--outline);
   border-radius: 6px;
   padding: 4px 0;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 8px 28px var(--shadow);
 }
 
 .menu-item {
@@ -126,7 +156,7 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
   white-space: nowrap;
 }
 
-.menu-item:hover, .menu-item:focus { background: rgba(79, 195, 247, 0.25); }
+.menu-item:hover, .menu-item:focus { background: color-mix(in srgb, var(--accent) 25%, transparent); }
 .menu-item.disabled { color: var(--text-dim); opacity: 0.55; }
 .menu-item.disabled:hover { background: none; }
 .menu-tick { color: var(--accent); text-align: center; }
@@ -152,8 +182,8 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
 .icon-button svg { width: 17px; height: 17px; fill: currentColor; }
 .icon-button:hover { filter: brightness(1.12); }
 .icon-button:active { filter: brightness(1.25); }
-.icon-button.record { color: var(--active-colour); }
-.icon-button.on { background: color-mix(in srgb, var(--active-colour) 25%, var(--panel-light)); color: var(--active-colour); }
+.icon-button.record { color: var(--active-colour, var(--accent)); }
+.icon-button.on { background: color-mix(in srgb, var(--active-colour, var(--accent)) 25%, var(--panel-light)); color: var(--active-colour, var(--accent)); }
 .icon-button.small { width: 22px; height: 22px; border-radius: 4px; }
 .icon-button.small svg { width: 10px; height: 10px; }
 
@@ -173,7 +203,7 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
 .text-button:hover:not(:disabled) { filter: brightness(1.15); }
 .text-button:disabled { opacity: 0.4; cursor: default; }
 .text-button.toggle { padding: 0; width: 24px; }
-.text-button.on { background: var(--on-colour); color: var(--background); }
+.text-button.on { background: var(--on-colour); color: var(--on-text); }
 
 .slider { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .slider.vertical { flex-direction: column; height: 100%; }
@@ -181,6 +211,7 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
 .slider.vertical .slider-track { width: 22px; height: auto; min-height: 40px; flex: 1; }
 .slider-rail, .slider-fill { position: absolute; border-radius: 2px; pointer-events: none; }
 .slider-rail { background: var(--outline); }
+.slider-fill { background: var(--accent); }
 .slider.horizontal .slider-rail, .slider.horizontal .slider-fill { top: 9px; height: 4px; left: 0; }
 .slider.horizontal .slider-rail { right: 0; }
 .slider.vertical .slider-rail, .slider.vertical .slider-fill { left: 9px; width: 4px; bottom: 0; }
@@ -193,7 +224,7 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
   border-radius: 50%;
   background: var(--text);
   pointer-events: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1px 3px var(--shadow);
 }
 
 .slider.horizontal .slider-thumb { top: 5px; transform: translateX(-50%); }
@@ -386,11 +417,14 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
 .track-viewport { position: relative; overflow-y: auto; overflow-x: hidden; min-height: 0; }
 .track-content { position: relative; min-height: 100%; }
 
+/* El texto de bienvenida, centrado en su zona: la de las ondas (a la derecha
+   de las cabeceras de pista), no en todo el ancho de la ventana. */
 .empty-hint {
   position: absolute;
-  top: 44px;
-  left: 0;
-  right: 0;
+  inset: 0 0 0 var(--header-width);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 20px;
   text-align: center;
   color: var(--text-dim);
@@ -400,7 +434,7 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
 }
 
 .track-row { position: absolute; left: 0; right: 0; height: 84px; display: flex; }
-.track-row.reordering { outline: 2px solid var(--track-colour); outline-offset: -2px; z-index: 5; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5); }
+.track-row.reordering { outline: 2px solid var(--track-colour); outline-offset: -2px; z-index: 5; box-shadow: 0 6px 18px var(--shadow); }
 
 .track-header {
   position: relative;
@@ -483,8 +517,8 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
 .add-track-circle::after { width: 1.5px; height: 9px; }
 
 .hscroll-track { position: relative; flex: 1; min-width: 0; }
-.hscroll-thumb { position: absolute; top: 2px; bottom: 2px; border-radius: 4px; background: #555c6b; cursor: grab; touch-action: none; }
-.hscroll-thumb:hover { background: #666e7e; }
+.hscroll-thumb { position: absolute; top: 2px; bottom: 2px; border-radius: 4px; background: var(--scroll-thumb); cursor: grab; touch-action: none; }
+.hscroll-thumb:hover { background: var(--scroll-thumb-hover); }
 
 /* ------------------------------------------------------------ Mezclador */
 .mixer { display: flex; flex-direction: column; min-height: 0; background: var(--background); border-top: 1px solid var(--outline); }
@@ -506,7 +540,7 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
 .strip-meter { width: 10px; height: 100%; flex: none; }
 
 .effect-panel { padding: 0 8px 6px; }
-.effect-panel.enabled { border-color: rgba(79, 195, 247, 0.6); }
+.effect-panel.enabled { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
 .effect-header { height: 28px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-left: 2px; }
 .effect-name { font-weight: 700; color: var(--text-dim); }
 .effect-panel.enabled .effect-name { color: var(--text); }
@@ -555,7 +589,7 @@ body.dragging-track, body.dragging-track * { cursor: grabbing !important; user-s
   background: var(--panel);
   border: 1px solid var(--outline);
   border-radius: 8px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 48px var(--shadow);
   padding: 16px 18px 14px;
 }
 
@@ -616,6 +650,7 @@ kbd { font: 12px var(--mono); background: var(--panel-light); border: 1px solid 
   display: none;
   flex-direction: column;
   background: var(--background);
+  color: var(--text);
 }
 
 .separation-header { flex: none; height: 64px; padding: 10px 20px; text-align: center; }
@@ -658,10 +693,89 @@ kbd { font: 12px var(--mono); background: var(--panel-light); border: 1px solid 
   place-items: center;
   border: 2px dashed var(--accent);
   border-radius: 12px;
-  background: rgba(79, 195, 247, 0.08);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   pointer-events: none;
   font-size: 18px;
   font-weight: 700;
 }
 
 .drop-overlay.visible { display: grid; }
+
+/* ------------------------------------------------------------ Tutorial */
+/* ui/tour.ts: todo oscurecido menos la zona de la que se habla (la sombra del
+   foco tapa el resto) y, al lado, la tarjeta con su flecha. */
+.tour-overlay { position: fixed; inset: 0; z-index: 240; }
+
+.tour-spotlight {
+  position: fixed;
+  border-radius: 8px;
+  box-shadow: 0 0 0 2px var(--accent), 0 0 0 9999px rgba(0, 0, 0, 0.62);
+  transition: left 0.28s ease, top 0.28s ease, width 0.28s ease, height 0.28s ease;
+  pointer-events: none;
+}
+
+.tour-spotlight::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 10px;
+  border: 2px solid var(--accent);
+  animation: tour-pulse 1.6s ease-out infinite;
+}
+
+.tour-spotlight.empty { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.62); }
+.tour-spotlight.empty::after { display: none; }
+
+@keyframes tour-pulse {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(1.04, 1.12); opacity: 0; inset: -8px; }
+}
+
+.tour-card {
+  position: fixed;
+  width: min(380px, calc(100vw - 24px));
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  padding: 14px 16px 12px;
+  transition: left 0.28s ease, top 0.28s ease;
+}
+
+.tour-arrow {
+  position: fixed;
+  width: 14px;
+  height: 14px;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  transform: rotate(45deg);
+  transition: left 0.28s ease, top 0.28s ease;
+  pointer-events: none;
+}
+
+/* Solo se ven los dos lados que sobresalen de la tarjeta. */
+.tour-arrow[data-side="top"] { border-right-color: transparent; border-bottom-color: transparent; }
+.tour-arrow[data-side="bottom"] { border-left-color: transparent; border-top-color: transparent; }
+.tour-arrow[data-side="left"] { border-right-color: transparent; border-top-color: transparent; }
+.tour-arrow[data-side="right"] { border-left-color: transparent; border-bottom-color: transparent; }
+
+.tour-count { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
+.tour-title { font-size: 16px; font-weight: 700; margin: 2px 0 8px; }
+.tour-body { font-size: 13.5px; }
+.tour-body p { margin: 0 0 9px; }
+.tour-buttons { display: flex; gap: 8px; margin-top: 6px; }
+.tour-buttons .dialog-button { min-width: 0; }
+.tour-skip { margin-right: auto; background: none; border-color: transparent; color: var(--text-dim); padding: 0 6px; }
+.tour-skip:hover { color: var(--text); }
+
+.tour-choice { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.tour-choice > span { color: var(--text-dim); }
+.tour-options { display: flex; border: 1px solid var(--outline); border-radius: 6px; overflow: hidden; }
+.tour-option { border: 0; background: var(--panel-light); color: var(--text); height: 28px; padding: 0 14px; }
+.tour-option + .tour-option { border-left: 1px solid var(--outline); }
+.tour-option.selected { background: var(--accent); color: var(--background); font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spotlight, .tour-card, .tour-arrow { transition: none; }
+  .tour-spotlight::after { animation: none; }
+}

@@ -50,14 +50,32 @@ export class Colour {
   }
 }
 
-export const Palette = {
-  background: Colour.hex('#121419'),
-  panel: Colour.hex('#1b1e25'),
-  panelLight: Colour.hex('#252932'),
-  outline: Colour.hex('#343945'),
-  text: Colour.hex('#e4e6eb'),
-  textDim: Colour.hex('#8b919c'),
-  accent: Colour.hex('#4fc3f7'),
+export type Theme = 'dark' | 'light';
+
+/** Los mismos colores que las variables de styles.css (lo que se pinta en
+    lienzos no puede leerlas). Mute, solo y grabar no cambian con el tema. */
+const themeColours = {
+  dark: {
+    background: Colour.hex('#121419'),
+    panel: Colour.hex('#1b1e25'),
+    panelLight: Colour.hex('#252932'),
+    outline: Colour.hex('#343945'),
+    text: Colour.hex('#e4e6eb'),
+    textDim: Colour.hex('#8b919c'),
+    accent: Colour.hex('#4fc3f7'),
+  },
+  light: {
+    background: Colour.hex('#f2f4f7'),
+    panel: Colour.hex('#ffffff'),
+    panelLight: Colour.hex('#e3e7ee'),
+    outline: Colour.hex('#c8ced9'),
+    text: Colour.hex('#1b1f27'),
+    textDim: Colour.hex('#5b6472'),
+    accent: Colour.hex('#0b84c9'),
+  },
+};
+
+const fixedColours = {
   mute: Colour.hex('#f0b429'),
   solo: Colour.hex('#5ccb7a'),
   record: Colour.hex('#e5484d'),
@@ -66,22 +84,50 @@ export const Palette = {
   transparent: new Colour(0, 0, 0, 0),
 };
 
-const named: [string, string][] = [
-  ['Voz', '#ff6b9d'],
-  ['Batería', '#ffa94d'],
-  ['Bajo', '#b197fc'],
-  ['Guitarra', '#ff6b6b'],
-  ['Piano', '#ffd43b'],
-  ['Otros', '#38d9a9'],
-  ['Grabación', '#748ffc'],     // índigo: el rojo queda solo para "grabando"
+/** El tema oscuro, siempre: la pantalla de ondas de la separación no cambia. */
+export const DarkPalette = { ...themeColours.dark, ...fixedColours } as const;
+
+/** Colores del tema actual (cambian con setPaletteTheme). */
+export const Palette = { ...themeColours.dark, ...fixedColours };
+
+let paletteTheme: Theme = 'dark';
+let paletteVersion = 0;
+
+export function setPaletteTheme(theme: Theme): void {
+  paletteTheme = theme;
+  Object.assign(Palette, themeColours[theme]);
+  ++paletteVersion;
+}
+
+/** Cambia cada vez que cambia el tema: los lienzos que solo se repintan
+    cuando cambian sus datos lo comparan para saber si deben repintarse. */
+export function getPaletteVersion(): number {
+  return paletteVersion;
+}
+
+/** El color de una pista tal como se pinta sobre el fondo del tema: los tonos
+    pastel del tema oscuro apenas se ven sobre un fondo claro, así que se oscurecen. */
+export function onBackground(colour: Colour): Colour {
+  return paletteTheme === 'light' && !colour.isTransparent() ? colour.darker(0.32) : colour;
+}
+
+// Con el nombre en cualquier idioma de la interfaz (ver core/i18n.ts).
+const named: [string[], string][] = [
+  [['Voz', 'Vocals'], '#ff6b9d'],
+  [['Batería', 'Drums'], '#ffa94d'],
+  [['Bajo', 'Bass'], '#b197fc'],
+  [['Guitarra', 'Guitar'], '#ff6b6b'],
+  [['Piano'], '#ffd43b'],
+  [['Otros', 'Other'], '#38d9a9'],
+  [['Grabación', 'Recording'], '#748ffc'],     // índigo: el rojo queda solo para "grabando"
 ];
 
 const fallback = ['#4fc3f7', '#94d82d', '#f783ac', '#74c0fc', '#ffc078', '#63e6be'];
 
 /** Color de una pista según su nombre (stems conocidos) o su posición. */
 export function trackColourFor(trackName: string, index: number): Colour {
-  for (const [keyword, hex] of named)
-    if (trackName.startsWith(keyword))
+  for (const [keywords, hex] of named)
+    if (keywords.some(keyword => trackName.startsWith(keyword)))
       return Colour.hex(hex);
 
   return Colour.hex(fallback[Math.max(0, index) % fallback.length]);

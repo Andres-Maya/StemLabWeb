@@ -9,8 +9,9 @@
     Mientras se graba en la pista, su franja de color se pone roja.
 */
 import type { AudioEngine } from '../audio/engine.ts';
+import { tr } from '../core/i18n.ts';
 import type { AudioTrack } from '../model/track.ts';
-import { Colour, Palette } from './colour.ts';
+import { Colour, onBackground, Palette } from './colour.ts';
 import { IconButton, Knob, LevelMeter, LinearSlider, toggleButton } from './controls.ts';
 import { h, trackPointer } from './dom.ts';
 import { WaveformLane } from './waveformLane.ts';
@@ -47,25 +48,26 @@ export class TrackRow {
   onReorderEnd: (row: TrackRow) => void = () => undefined;
 
   constructor(track: AudioTrack, colour: Colour, engine: AudioEngine) {
+    // Las filas se rehacen al cambiar de idioma o de tema (TrackList.rebuild):
+    // sus textos y colores son los del momento en que se crean.
+    colour = onBackground(colour);
     this.track = track;
     this.colour = colour;
 
     this.folderStrip = h('div', { className: 'folder-strip' });
     this.colourStrip = h('div', { className: 'colour-strip' });
-    this.nameLabel = h('div', { className: 'track-name', title: 'Doble clic (o F2) para cambiar el nombre. Arrastra para mover la pista.' });
+    this.nameLabel = h('div', { className: 'track-name', title: tr('Doble clic (o F2) para cambiar el nombre. Arrastra para mover la pista.') });
     this.nameLabel.addEventListener('dblclick', () => this.startRename());
 
-    const mute = toggleButton(track.mute, 'M', Palette.mute, 'Silenciar (mute)');
-    const solo = toggleButton(track.solo, 'S', Palette.solo, 'Solo');
-    const remove = new IconButton('Eliminar pista', 'close');
+    const mute = toggleButton(track.mute, 'M', Palette.mute, tr('Silenciar (mute)'));
+    const solo = toggleButton(track.solo, 'S', Palette.solo, tr('Solo'));
+    const remove = new IconButton(tr('Eliminar pista'), 'close');
     remove.element.classList.add('small');
     remove.element.addEventListener('click', () => this.onDelete(this));
 
     const volume = new LinearSlider(track.volume, { colour });
     volume.element.classList.add('track-volume');
-    volume.element.title = 'Volumen';
     const pan = new Knob(track.pan, { size: 38 });
-    pan.element.title = 'Paneo';
     const meter = new LevelMeter(ch => engine.getAndResetTrackPeak(track.id, ch));
     meter.element.classList.add('track-meter');
 
@@ -117,7 +119,7 @@ export class TrackRow {
     if (!colour.equals(this.folderColour)) {
       this.folderColour = colour;
       this.folderStrip.style.display = colour.isTransparent() ? 'none' : 'block';
-      this.folderStrip.style.background = colour.withAlpha(0.55).toString();
+      this.folderStrip.style.background = onBackground(colour).withAlpha(0.55).toString();
       this.colourStrip.style.left = colour.isTransparent() ? '0' : '8px';
     }
   }
@@ -138,7 +140,7 @@ export class TrackRow {
 
     this.editing = true;
     const oldName = this.track.name;
-    const field = h('input', { type: 'text', className: 'name-input', value: oldName, 'aria-label': 'Nombre de la pista' });
+    const field = h('input', { type: 'text', className: 'name-input', value: oldName, 'aria-label': tr('Nombre de la pista') });
     this.nameLabel.replaceChildren(field);
     field.focus();
     field.select();

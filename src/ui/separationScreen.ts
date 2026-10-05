@@ -15,8 +15,9 @@
       - Después, cada onda se mantiene mientras exista su pista (isStemPresent):
         si se elimina se desvanece, y si se deshace vuelve.
 */
+import { L, tr } from '../core/i18n.ts';
 import type { ClipSource } from '../model/clip.ts';
-import { Colour, Palette } from './colour.ts';
+import { Colour, DarkPalette } from './colour.ts';
 import { h, prepareCanvas } from './dom.ts';
 
 const twoPi = Math.PI * 2;
@@ -109,7 +110,7 @@ export class SeparationView {
   }
 
   title(): string {
-    return (this.finished && this.succeeded ? 'Pistas de "' : 'Separando "') + this.sourceName + '"';
+    return this.finished && this.succeeded ? tr('Pistas de "{0}"', this.sourceName) : tr('Separando "{0}"', this.sourceName);
   }
 
   advance(seconds: number): void {
@@ -122,7 +123,7 @@ export class SeparationView {
 
     if (this.finished && this.succeeded) {
       this.progress = 1;
-      this.status = '¡Separación completada!';
+      this.status = tr('¡Separación completada!');
     }
 
     // El número se acerca al progreso real sin saltos.
@@ -235,7 +236,7 @@ export class SeparationView {
 
   //============================================================================
   paint(g: CanvasRenderingContext2D, width: number, height: number): void {
-    g.fillStyle = Palette.background.toString();
+    g.fillStyle = DarkPalette.background.toString();
     g.fillRect(0, 0, width, height);
 
     const cx = width / 2, cy = height / 2;
@@ -299,7 +300,7 @@ export class SeparationView {
       g.fillText(text, cx, cy + offset);
     }
 
-    g.fillStyle = Palette.white.toString();
+    g.fillStyle = DarkPalette.white.toString();
     g.fillText(text, cx, cy);
   }
 
@@ -336,7 +337,7 @@ export class SeparationView {
     g.strokeStyle = this.sourceColour.brighter(0.5).withAlpha(0.45).toString();
     g.lineWidth = 3.5;
     g.stroke();
-    g.strokeStyle = Palette.white.withAlpha(0.95).toString();
+    g.strokeStyle = DarkPalette.white.withAlpha(0.95).toString();
     g.lineWidth = 1.6;
     g.stroke();
 
@@ -365,7 +366,7 @@ export class SeparationView {
 
     if (highest >= 0 && this.ringLevels[highest] > 0.2) {
       fillGlow(g, xs[highest], ys[highest], 18, dotColour, 0.75);
-      g.fillStyle = Palette.white.toString();
+      g.fillStyle = DarkPalette.white.toString();
       g.beginPath();
       g.arc(xs[highest], ys[highest], 3, 0, twoPi);
       g.fill();
@@ -500,7 +501,7 @@ export class SeparationScreen {
   private titleLabel = h('div', { className: 'separation-title' });
   private statusLabel = h('div', { className: 'separation-status', role: 'status' });
   private canvas = h('canvas', { className: 'separation-canvas', 'aria-hidden': 'true' });
-  private cancelButton = h('button', { className: 'dialog-button', type: 'button', text: 'Cancelar separación' });
+  private cancelButton = h('button', { className: 'dialog-button', type: 'button', text: L('Cancelar separación') });
   private view: SeparationView | null = null;
   private folderId = '';
   private lastFrame = 0;
@@ -509,12 +510,12 @@ export class SeparationScreen {
   onVisibilityChanged: () => void = () => undefined;
 
   constructor() {
-    const close = h('button', { className: 'separation-close', type: 'button', title: 'Volver al proyecto (Esc). La separación sigue.',
-                                'aria-label': 'Volver al proyecto' }, h('span', { text: '×' }), h('span', { text: 'Volver al proyecto' }));
+    const close = h('button', { className: 'separation-close', type: 'button', title: L('Volver al proyecto (Esc). La separación sigue.'),
+                                'aria-label': L('Volver al proyecto') }, h('span', { text: '×' }), h('span', { text: L('Volver al proyecto') }));
     close.addEventListener('click', () => this.hide());
     this.cancelButton.addEventListener('click', () => this.onCancel());
 
-    this.element = h('div', { className: 'separation-screen', role: 'dialog', 'aria-label': 'Separación de instrumentos' },
+    this.element = h('div', { className: 'separation-screen', role: 'dialog', 'aria-label': L('Separación de instrumentos') },
       h('header', { className: 'separation-header' }, this.titleLabel, this.statusLabel), close,
       this.canvas,
       h('footer', { className: 'separation-footer' }, this.cancelButton));

@@ -15,13 +15,14 @@
 */
 import type { AudioEngine } from '../audio/engine.ts';
 import { previewBinSize } from '../audio/protocol.ts';
+import { L, tr, type Localised } from '../core/i18n.ts';
 import { gainToDecibels } from '../core/range.ts';
 import { ClipEditing } from '../model/clip.ts';
 import type { ProjectManager } from '../model/project.ts';
 import type { AudioTrack } from '../model/track.ts';
 import type { AudioClip } from '../model/clip.ts';
-import { Colour, Palette, trackColourFor } from './colour.ts';
-import { h, prepareCanvas, roundedRect, trackPointer } from './dom.ts';
+import { Colour, onBackground, Palette, trackColourFor } from './colour.ts';
+import { h, localise, prepareCanvas, roundedRect, trackPointer } from './dom.ts';
 import { item, separator, showMenu, submenu, type MenuEntry } from './menu.ts';
 import { TimeRuler } from './timeRuler.ts';
 import { headerWidth, rowHeight, TrackRow } from './trackRow.ts';
@@ -48,15 +49,15 @@ class FolderHeader {
   private icon = h('div', { className: 'folder-icon', 'aria-hidden': 'true' });
   private name = h('div', { className: 'folder-name' });
   private count = h('div', { className: 'folder-count' });
-  private wavesButton = h('button', { className: 'text-button waves-button', type: 'button', text: 'Ondas',
-                                      title: 'Abrir o cerrar la pantalla de ondas de la separación' });
+  private wavesButton = h('button', { className: 'text-button waves-button', type: 'button', text: tr('Ondas'),
+                                      title: tr('Abrir o cerrar la pantalla de ondas de la separación') });
   onToggle: () => void = () => undefined;
   onToggleWaves: () => void = () => undefined;
   onMenu: (x: number, y: number) => void = () => undefined;
 
   constructor(info: FolderInfo) {
     this.info = info;
-    this.element = h('div', { className: 'folder-header', title: 'Clic: desplegar o plegar. Clic derecho: menú de la carpeta' },
+    this.element = h('div', { className: 'folder-header', title: tr('Clic: desplegar o plegar. Clic derecho: menú de la carpeta') },
       h('div', { className: 'folder-header-left' },
         h('div', { className: 'folder-colour' }), this.arrow, this.icon,
         h('div', { className: 'folder-text' }, this.name, this.count), this.wavesButton),
@@ -81,12 +82,13 @@ class FolderHeader {
 
   setInfo(info: FolderInfo, members: number): void {
     this.info = info;
-    this.element.style.setProperty('--folder-colour', info.colour.toString());
-    this.element.style.setProperty('--folder-tint', Palette.panel.interpolatedWith(info.colour, 0.14).toString());
-    this.element.style.setProperty('--folder-band', info.colour.withAlpha(0.06).toString());
+    const colour = onBackground(info.colour);
+    this.element.style.setProperty('--folder-colour', colour.toString());
+    this.element.style.setProperty('--folder-tint', Palette.panel.interpolatedWith(colour, 0.14).toString());
+    this.element.style.setProperty('--folder-band', colour.withAlpha(0.06).toString());
     this.element.classList.toggle('collapsed', !info.expanded);
     this.name.textContent = info.name;
-    this.count.textContent = members + (members === 1 ? ' pista' : ' pistas');
+    this.count.textContent = members === 1 ? tr('1 pista') : tr('{0} pistas', members);
     this.wavesButton.disabled = !info.canShowWaves;
     this.wavesButton.classList.toggle('on', info.wavesOpen);
     this.wavesButton.style.setProperty('--on-colour', info.colour.withAlpha(0.8).toString());
@@ -116,8 +118,8 @@ export class TrackList {
   private viewport = h('div', { className: 'track-viewport' });
   private content = h('div', { className: 'track-content' });
   private emptyHint = h('div', { className: 'empty-hint' });
-  private emptyAddButton = this.createAddButton('Añadir una pista (T)', () => this.onAddTrack(-1, ''));
-  private addBelowButton = this.createAddButton('Añadir una pista debajo', () => this.addBelow());
+  private emptyAddButton = this.createAddButton(L('Añadir una pista (T)'), () => this.onAddTrack(-1, ''));
+  private addBelowButton = this.createAddButton(L('Añadir una pista debajo'), () => this.addBelow());
   private recordingCanvas = h('canvas', { className: 'recording-lane' });
   private playhead = h('div', { className: 'playhead' });
   private scrollTrack = h('div', { className: 'hscroll-track' });
@@ -167,8 +169,8 @@ export class TrackList {
     this.engine = engine;
     this.projects = projects;
 
-    this.emptyHint.textContent = 'Pulsa + para añadir una pista, arrastra aquí una canción o usa Archivo > Importar audio...\n'
-                               + 'Después, IA > Separar instrumentos. Para grabar, añade una pista y pulsa R.';
+    localise(this.emptyHint, 'text', L('Pulsa + para añadir una pista, arrastra aquí una canción o usa Archivo > Importar audio...\n'
+                                       + 'Después, IA > Separar instrumentos. Para grabar, añade una pista y pulsa R.'));
     this.emptyAddButton.style.top = '6px';
     this.content.append(this.emptyHint, this.emptyAddButton, this.recordingCanvas, this.playhead, this.addBelowButton);
     this.viewport.append(this.content);
@@ -191,6 +193,22 @@ export class TrackList {
   }
 
   //============================================================================
+  /** Vuelve a crear las filas y las cabeceras de carpeta (cambió el idioma o
+      el tema: se construyeron con los textos y colores de antes). */
+  rebuild(): void {
+    for (const row of this.rows)
+      row.dispose();
+
+    for (const header of this.folderHeaders.values())
+      header.element.remove();
+
+    this.rows = [];
+    this.folderHeaders.clear();
+    this.setFolders(this.folders);
+    this.refresh();
+    this.setVisibleRange(this.visibleStart, this.visibleLength);
+  }
+
   /** Sincroniza las filas con las pistas del proyecto (conserva las existentes). */
   refresh(): void {
     const tracks = this.projects.tracks;
@@ -215,7 +233,7 @@ export class TrackList {
 
     this.rows = newRows;
     this.rebuildEntries();
-    this.emptyHint.style.display = this.rows.length === 0 ? 'block' : 'none';
+    this.emptyHint.style.display = this.rows.length === 0 ? '' : 'none';
     this.emptyAddButton.style.display = this.rows.length === 0 ? 'block' : 'none';
     this.hideAddButton();
 
@@ -263,7 +281,7 @@ export class TrackList {
   }
 
   /** "+" en un círculo sobre una línea: solo el círculo responde al ratón. */
-  private createAddButton(tooltip: string, onClick: () => void): HTMLElement {
+  private createAddButton(tooltip: Localised, onClick: () => void): HTMLElement {
     const circle = h('button', { className: 'add-track-circle', type: 'button', title: tooltip, 'aria-label': tooltip });
     circle.addEventListener('click', onClick);
     circle.addEventListener('pointerdown', e => e.stopPropagation());
@@ -455,12 +473,12 @@ export class TrackList {
       return;
 
     showMenu([
-      item(folder.expanded ? 'Plegar carpeta' : 'Desplegar carpeta', () => this.onToggleFolder(folderId)),
-      item(folder.wavesOpen ? 'Cerrar ondas' : 'Abrir ondas', () => this.onToggleFolderWindow(folderId), { enabled: folder.canShowWaves }),
+      item(folder.expanded ? tr('Plegar carpeta') : tr('Desplegar carpeta'), () => this.onToggleFolder(folderId)),
+      item(folder.wavesOpen ? tr('Cerrar ondas') : tr('Abrir ondas'), () => this.onToggleFolderWindow(folderId), { enabled: folder.canShowWaves }),
       separator(),
-      item('Descargar sus pistas (.zip)...', () => this.onDownloadFolder(folderId)),
+      item(tr('Descargar sus pistas (.zip)...'), () => this.onDownloadFolder(folderId)),
       separator(),
-      item('Eliminar carpeta...', () => this.onDeleteFolderRequested(folderId)),
+      item(tr('Eliminar carpeta...'), () => this.onDeleteFolderRequested(folderId)),
     ], x, y);
   }
 
@@ -481,31 +499,31 @@ export class TrackList {
       .map(f => item(f.name, () => this.onTrackDropped(track, f.id, this.indexAtEndOf(f.id, track))));
 
     const entries: MenuEntry[] = [
-      item('Cambiar nombre', () => this.rows[indexNow()]?.startRename(), { shortcut: 'F2' }),
-      item('Añadir pista debajo', () => this.onAddTrack(indexNow() + 1, folderOf())),
+      item(tr('Cambiar nombre'), () => this.rows[indexNow()]?.startRename(), { shortcut: 'F2' }),
+      item(tr('Añadir pista debajo'), () => this.onAddTrack(indexNow() + 1, folderOf())),
       separator(),
-      item('Copiar pista', () => this.onCopyTrack(track), { shortcut: 'Ctrl+C' }),
-      item('Cortar pista', () => this.onCutTrack(track), { shortcut: 'Ctrl+X' }),
-      item('Pegar pista debajo', () => this.onPasteTrack(indexNow() + 1), { shortcut: 'Ctrl+V', enabled: this.canPasteTrack() }),
+      item(tr('Copiar pista'), () => this.onCopyTrack(track), { shortcut: 'Ctrl+C' }),
+      item(tr('Cortar pista'), () => this.onCutTrack(track), { shortcut: 'Ctrl+X' }),
+      item(tr('Pegar pista debajo'), () => this.onPasteTrack(indexNow() + 1), { shortcut: 'Ctrl+V', enabled: this.canPasteTrack() }),
       separator(),
-      item('Subir pista', () => this.moveTrack(indexNow(), indexNow() - 1), { shortcut: 'Alt+↑', enabled: index > 0 }),
-      item('Bajar pista', () => this.moveTrack(indexNow(), indexNow() + 1), { shortcut: 'Alt+↓', enabled: index + 1 < this.rows.length }),
+      item(tr('Subir pista'), () => this.moveTrack(indexNow(), indexNow() - 1), { shortcut: 'Alt+↑', enabled: index > 0 }),
+      item(tr('Bajar pista'), () => this.moveTrack(indexNow(), indexNow() + 1), { shortcut: 'Alt+↓', enabled: index + 1 < this.rows.length }),
     ];
 
     if (current !== undefined || into.length > 0) {
       entries.push(separator());
 
       if (current !== undefined)
-        entries.push(item(`Sacar de la carpeta "${current.name}"`,
+        entries.push(item(tr('Sacar de la carpeta "{0}"', current.name),
                           () => this.onTrackDropped(track, '', this.indexAtEndOf(track.folderId, track))));
 
-      entries.push(submenu('Meter en la carpeta', into, into.length > 0));
+      entries.push(submenu(tr('Meter en la carpeta'), into, into.length > 0));
     }
 
     entries.push(separator(),
-                 item('Descargar pista...', () => this.onDownloadTrack(track), { enabled: track.hasClips() }),
+                 item(tr('Descargar pista...'), () => this.onDownloadTrack(track), { enabled: track.hasClips() }),
                  separator(),
-                 item('Eliminar pista...', () => this.onDeleteRequested(track), { shortcut: 'Supr' }));
+                 item(tr('Eliminar pista...'), () => this.onDeleteRequested(track), { shortcut: tr('Supr') }));
 
     showMenu(entries, x, y);
   }

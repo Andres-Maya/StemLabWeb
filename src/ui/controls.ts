@@ -3,10 +3,11 @@
     control cambia el parámetro y se actualiza solo cuando el parámetro cambia
     por otro lado (deshacer, otro control, cargar...).
 */
+import { L, tr, type Localised } from '../core/i18n.ts';
 import type { Parameter } from '../core/parameter.ts';
 import { gainToDecibels } from '../core/range.ts';
-import { Colour, Palette } from './colour.ts';
-import { h, prepareCanvas, ticker, trackPointer } from './dom.ts';
+import { Colour, getPaletteVersion, Palette } from './colour.ts';
+import { h, localise, prepareCanvas, ticker, trackPointer } from './dom.ts';
 
 const rotaryStart = Math.PI * 1.2;
 const rotaryEnd = Math.PI * 2.8;
@@ -70,7 +71,7 @@ export class Knob {
     this.parameter = parameter;
     this.options = options;
     this.element = h('div', { className: 'knob' });
-    this.element.title = options.label ?? parameter.name;
+    this.element.title = options.label ?? tr(parameter.name);
 
     if (options.label !== undefined)
       this.element.append(h('div', { className: 'control-label', text: options.label }));
@@ -195,17 +196,19 @@ export class LinearSlider {
   constructor(parameter: Parameter, options: SliderOptions = {}) {
     this.parameter = parameter;
     this.vertical = options.vertical === true;
-    const colour = options.colour ?? Palette.accent;
-
     this.fillBar = h('div', { className: 'slider-fill' });
-    this.fillBar.style.background = colour.toString();
+
+    // Sin color propio usa el de acento del tema (styles.css).
+    if (options.colour !== undefined)
+      this.fillBar.style.background = options.colour.toString();
+
     this.thumb = h('div', { className: 'slider-thumb' });
     this.track = h('div', { className: 'slider-track' }, h('div', { className: 'slider-rail' }), this.fillBar, this.thumb);
     this.element = h('div', { className: 'slider ' + (this.vertical ? 'vertical' : 'horizontal') }, this.track);
-    this.element.title = parameter.name;
+    localise(this.element, 'title', L(parameter.name));
 
     if (options.textBox !== undefined && options.textBox !== 'none') {
-      this.text = h('div', { className: 'slider-text', title: 'Doble clic para escribir un valor' });
+      this.text = h('div', { className: 'slider-text', title: L('Doble clic para escribir un valor') });
       this.text.style.width = `${options.textWidth ?? 64}px`;
       this.element.classList.add('text-' + options.textBox);
       this.element.append(this.text);
@@ -323,9 +326,9 @@ export function tickBox(parameter: Parameter, tooltip: string): HTMLElement {
 
 /** Lista desplegable de un parámetro de tipo "choice". */
 export function choiceBox(parameter: Parameter): HTMLSelectElement {
-  const select = h('select', { className: 'choice-box', title: parameter.name });
+  const select = h('select', { className: 'choice-box', title: tr(parameter.name) });
 
-  parameter.choices.forEach((choice, i) => select.append(h('option', { value: String(i), text: choice })));
+  parameter.choices.forEach((choice, i) => select.append(h('option', { value: String(i), text: tr(choice) })));
   select.addEventListener('change', () => {
     parameter.set(Number(select.value));
     select.blur();      // los atajos de teclado vuelven a la aplicación
@@ -342,6 +345,7 @@ export function choiceBox(parameter: Parameter): HTMLSelectElement {
 export class LevelMeter {
   readonly element = h('canvas', { className: 'level-meter' });
   private levels = [0, 0];
+  private paletteVersion = getPaletteVersion();
   private readPeak: (channel: number) => number;
 
   constructor(readPeak: (channel: number) => number) {
@@ -362,8 +366,11 @@ export class LevelMeter {
       }
     }
 
-    if (changed || this.element.width === 0)
+    // También al cambiar de tema: el fondo del medidor es de otro color.
+    if (changed || this.element.width === 0 || this.paletteVersion !== getPaletteVersion()) {
+      this.paletteVersion = getPaletteVersion();
       this.draw();
+    }
   }
 
   private draw(): void {
@@ -418,10 +425,13 @@ export class IconButton {
   readonly element: HTMLButtonElement;
   private icon: Icon;
 
-  constructor(tooltip: string, icon: Icon, activeColour: Colour = Palette.accent) {
+  constructor(tooltip: string | Localised, icon: Icon, activeColour?: Colour) {
     this.icon = icon;
     this.element = h('button', { className: 'icon-button', title: tooltip, type: 'button', 'aria-label': tooltip });
-    this.element.style.setProperty('--active-colour', activeColour.toString());
+
+    // Sin color propio usa el de acento del tema (styles.css).
+    if (activeColour !== undefined)
+      this.element.style.setProperty('--active-colour', activeColour.toString());
 
     if (icon === 'record')
       this.element.classList.add('record');

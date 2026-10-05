@@ -1,5 +1,6 @@
 /** Mensajes · progreso de la IA con "Ver progreso" y "Cancelar" · aviso de que nada se guarda en la nube. */
 import type { SeparationManager } from '../ai/separator.ts';
+import { L, tr } from '../core/i18n.ts';
 import type { ProjectManager } from '../model/project.ts';
 import { h, ticker } from './dom.ts';
 
@@ -10,13 +11,13 @@ export class StatusBar {
 
   private ai: SeparationManager;
   private projects: ProjectManager;
-  private message = 'Listo.';
+  private message = tr('Listo.');
   private messageLabel = h('div', { className: 'status-message', role: 'status' });
   private sessionLabel = h('div', { className: 'status-session',
-    text: 'Sesión en este navegador: nada se guarda en la nube, descarga lo que quieras conservar.' });
+    text: L('Sesión en este navegador: nada se guarda en la nube, descarga lo que quieras conservar.') });
   private progress = h('div', { className: 'status-progress' }, h('div', { className: 'status-progress-bar' }));
-  private showButton = h('button', { className: 'text-button', type: 'button', text: 'Ver progreso' });
-  private cancelButton = h('button', { className: 'text-button', type: 'button', text: 'Cancelar' });
+  private showButton = h('button', { className: 'text-button', type: 'button', text: L('Ver progreso') });
+  private cancelButton = h('button', { className: 'text-button', type: 'button', text: L('Cancelar') });
 
   constructor(ai: SeparationManager, projects: ProjectManager) {
     this.ai = ai;
@@ -44,7 +45,7 @@ export class StatusBar {
       const value = this.ai.getProgress();
       text = this.ai.getStatus() + (value >= 0 ? `  ·  ${Math.round(value * 100)} %` : '');
     } else if (loading) {
-      text = 'Cargando audio...';
+      text = tr('Cargando audio...');
     }
 
     if (this.messageLabel.textContent !== text) {

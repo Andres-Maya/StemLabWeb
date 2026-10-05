@@ -8,6 +8,7 @@
 */
 import type { AudioEngine, RecordingInfo } from '../audio/engine.ts';
 import { baseName, decodeAudio } from '../audio/decode.ts';
+import { msg, tr } from '../core/i18n.ts';
 import { ClipEditing, createClipId, createSource, type AudioClip, type ClipSource } from './clip.ts';
 import { AudioTrack, type TrackFolder } from './track.ts';
 import { UndoManager, type UndoableAction } from './undo.ts';
@@ -136,7 +137,7 @@ export class ProjectManager {
       return ok;
     }
 
-    this.addTracks(tracks, 'Importar audio');
+    this.addTracks(tracks, msg('Importar audio'));
     return errors.length === 0 ? ok : fail(errors.join('\n'));
   }
 
@@ -208,7 +209,7 @@ export class ProjectManager {
   addEmptyTrack(baseName: string, insertIndex = -1, folderId = ''): AudioTrack {
     const track = new AudioTrack(this.createTrackName(baseName));
     track.folderId = folderId;
-    this.performUndoable(new TrackPresenceAction('add', this, track, insertIndex), 'Añadir pista');
+    this.performUndoable(new TrackPresenceAction('add', this, track, insertIndex), msg('Añadir pista'));
     return track;
   }
 
@@ -220,11 +221,11 @@ export class ProjectManager {
     if (this.findFolder(track.folderId) === undefined)
       track.folderId = '';
 
-    this.performUndoable(new TrackPresenceAction('add', this, track, insertIndex), 'Pegar pista');
+    this.performUndoable(new TrackPresenceAction('add', this, track, insertIndex), msg('Pegar pista'));
     return track;
   }
 
-  removeTrack(track: AudioTrack, actionName = 'Eliminar pista'): void {
+  removeTrack(track: AudioTrack, actionName = msg('Eliminar pista')): void {
     if (this.tracks.includes(track))
       this.performUndoable(new TrackPresenceAction('remove', this, track), actionName);
   }
@@ -243,13 +244,13 @@ export class ProjectManager {
   /** Anota un cambio de orden que ya se aplicó (arrastrar la cabecera, Alt+flechas). */
   trackMoved(track: AudioTrack, fromIndex: number, toIndex: number): void {
     if (fromIndex !== toIndex)
-      this.performUndoable(new MoveTrackAction(this, track, fromIndex, toIndex), 'Mover pista');
+      this.performUndoable(new MoveTrackAction(this, track, fromIndex, toIndex), msg('Mover pista'));
   }
 
   /** Anota un cambio de nombre que ya se aplicó a la pista. */
   trackRenamed(track: AudioTrack, oldName: string): void {
     if (track.name !== oldName)
-      this.performUndoable(new RenameTrackAction(this, track, oldName, track.name), 'Cambiar nombre de la pista');
+      this.performUndoable(new RenameTrackAction(this, track, oldName, track.name), msg('Cambiar nombre de la pista'));
   }
 
   //============================================================================
@@ -294,10 +295,10 @@ export class ProjectManager {
     if (sameFolder && this.tracks.indexOf(track) === index)
       return;
 
-    const name = sameFolder ? 'Mover pista'
-               : folderId === '' ? 'Sacar de la carpeta'
-               : track.folderId === '' ? 'Meter en la carpeta'
-               : 'Mover a otra carpeta';
+    const name = sameFolder ? msg('Mover pista')
+               : folderId === '' ? msg('Sacar de la carpeta')
+               : track.folderId === '' ? msg('Meter en la carpeta')
+               : msg('Mover a otra carpeta');
 
     this.performUndoable(new FolderMoveAction(this, track, folderId, index), name);
   }
@@ -310,7 +311,7 @@ export class ProjectManager {
     if (folder === undefined)
       return;
 
-    this.undoManager.beginNewTransaction('Eliminar carpeta');
+    this.undoManager.beginNewTransaction(msg('Eliminar carpeta'));
 
     for (const track of this.getFolderTracks(folderId))
       this.undoManager.perform(new TrackPresenceAction('remove', this, track));
@@ -338,7 +339,7 @@ export class ProjectManager {
       nunca tapa el audio que ya tiene la pista. */
   addRecording(recording: RecordingInfo, target: AudioTrack | null): Result {
     if (recording.timelineStart < 0 || recording.channels[0].length === 0)
-      return fail('No se grabó audio.');
+      return fail(tr('No se grabó audio.'));
 
     const left = recording.channels[0];
     const right = recording.channels[1] ?? left;
@@ -349,7 +350,7 @@ export class ProjectManager {
     const clip = this.makeClip(source, recording.timelineStart - recording.latencySamples);
 
     if (clip === null)
-      return fail('La grabación es demasiado corta.');
+      return fail(tr('La grabación es demasiado corta.'));
 
     if (target !== null && this.tracks.includes(target)) {
       // Los fragmentos de una pista no se solapan: la toma se recorta al hueco
@@ -357,16 +358,16 @@ export class ProjectManager {
       const updated = target.getClips();
 
       if (!ClipEditing.fitIntoFreeSpace(updated, clip))
-        return fail('No quedaba espacio libre para la grabación en la pista.');
+        return fail(tr('No quedaba espacio libre para la grabación en la pista.'));
 
       updated.push(clip);
-      this.editClips(target, updated, 'Grabar fragmento');
+      this.editClips(target, updated, msg('Grabar fragmento'));
       return ok;
     }
 
-    const track = new AudioTrack(this.createTrackName('Grabación'));
+    const track = new AudioTrack(this.createTrackName(tr('Grabación')));
     track.setClips([clip]);
-    this.performUndoable(new TrackPresenceAction('add', this, track), 'Grabar fragmento');
+    this.performUndoable(new TrackPresenceAction('add', this, track), msg('Grabar fragmento'));
     return ok;
   }
 
@@ -423,7 +424,7 @@ export class ProjectManager {
       return name;
 
     for (let number = 1; ; ++number) {
-      const candidate = name + (number === 1 ? ' (copia)' : ` (copia ${number})`);
+      const candidate = number === 1 ? tr('{0} (copia)', name) : tr('{0} (copia {1})', name, number);
 
       if (!isTaken(candidate))
         return candidate;

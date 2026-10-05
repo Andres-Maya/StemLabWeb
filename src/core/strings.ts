@@ -1,3 +1,5 @@
+import { msg, tr } from './i18n.ts';
+
 /** Formatea segundos como mm:ss.mmm */
 export function formatTime(seconds: number): string {
   seconds = Math.max(0, seconds);
@@ -10,17 +12,18 @@ export function formatTime(seconds: number): string {
 }
 
 const knownStems: [string, string][] = [
-  ['vocals', 'Voz'],
-  ['drums', 'Batería'],
-  ['bass', 'Bajo'],
-  ['guitar', 'Guitarra'],
-  ['piano', 'Piano'],
-  ['other', 'Otros'],
+  ['vocals', msg('Voz')],
+  ['drums', msg('Batería')],
+  ['bass', msg('Bajo')],
+  ['guitar', msg('Guitarra')],
+  ['piano', msg('Piano')],
+  ['other', msg('Otros')],
 ];
 
-/** Nombre en español de un stem ("vocals" → "Voz"). */
+/** Nombre de un stem en el idioma de la interfaz ("vocals" → "Voz"). */
 export function stemDisplayName(stemId: string): string {
-  return knownStems.find(([id]) => id === stemId)?.[1] ?? stemId;
+  const name = knownStems.find(([id]) => id === stemId)?.[1];
+  return name !== undefined ? tr(name) : stemId;
 }
 
 /** Orden de presentación de los stems (voz, batería, bajo, guitarra, piano, otros). */

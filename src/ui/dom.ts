@@ -1,5 +1,45 @@
 /** Utilidades mínimas de DOM. */
-type Attributes = Record<string, string | number | boolean | undefined | ((event: never) => void)>;
+import { Localised, onLanguageChange } from '../core/i18n.ts';
+
+type Attributes = Record<string, string | number | boolean | undefined | Localised | ((event: never) => void)>;
+
+// Textos que siguen al idioma (ver L() en core/i18n.ts). Las referencias son
+// débiles: un elemento que sale de la página se libera sin darse de baja.
+const localisedElements = new Set<WeakRef<Element>>();
+const localisedValues = new WeakMap<Element, Map<string, Localised>>();
+
+function applyLocalised(element: Element, key: string, value: Localised): void {
+  if (key === 'text')
+    element.textContent = value.toString();
+  else
+    element.setAttribute(key, value.toString());
+}
+
+/** Pone un texto ('text') o un atributo ('title', 'aria-label'...) que se
+    vuelve a traducir solo al cambiar de idioma. */
+export function localise(element: Element, key: string, value: Localised): void {
+  let values = localisedValues.get(element);
+
+  if (values === undefined) {
+    values = new Map();
+    localisedValues.set(element, values);
+    localisedElements.add(new WeakRef(element));
+  }
+
+  values.set(key, value);
+  applyLocalised(element, key, value);
+}
+
+onLanguageChange(() => {
+  for (const ref of [...localisedElements]) {
+    const element = ref.deref();
+
+    if (element === undefined)
+      localisedElements.delete(ref);
+    else
+      localisedValues.get(element)?.forEach((value, key) => applyLocalised(element, key, value));
+  }
+});
 
 export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attributes: Attributes = {},
                                                           ...children: (Node | string | null | undefined)[]): HTMLElementTagNameMap[K] {
@@ -9,7 +49,9 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attributes: Att
     if (value === undefined || value === false)
       continue;
 
-    if (typeof value === 'function')
+    if (value instanceof Localised)
+      localise(element, key, value);
+    else if (typeof value === 'function')
       element.addEventListener(key.replace(/^on/, '').toLowerCase(), value as EventListener);
     else if (key === 'className')
       element.className = String(value);

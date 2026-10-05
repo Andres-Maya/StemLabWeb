@@ -18,6 +18,7 @@
 import { rangeOf } from '../audio/peaks.ts';
 import { ClipEditing, clipEnd, type AudioClip, type ClipSource } from '../model/clip.ts';
 import type { AudioTrack } from '../model/track.ts';
+import { msg } from '../core/i18n.ts';
 import { Colour, Palette } from './colour.ts';
 import { h, prepareCanvas, roundedRect } from './dom.ts';
 
@@ -526,7 +527,7 @@ export class WaveformLane {
     this.clipsBeforeDrag = [];
 
     if (changed)
-      this.onClipsEdited(before, mode === 'move' ? 'Mover fragmento' : 'Recortar fragmento');
+      this.onClipsEdited(before, mode === 'move' ? msg('Mover fragmento') : msg('Recortar fragmento'));
     else
       // Clic sin arrastrar sobre un clip: además de seleccionarlo, el cabezal
       // va ahí (para grabar o pegar a continuación, o escuchar desde ese punto).
