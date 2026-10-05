@@ -33,7 +33,7 @@ import { MixerView } from './ui/mixerView.ts';
 import { SeparationScreen, SeparationView } from './ui/separationScreen.ts';
 import { StatusBar } from './ui/statusBar.ts';
 import { getTheme, onThemeChange, setTheme } from './ui/theme.ts';
-import { isTourOpen, isTourSeen, startTour, type TourStep } from './ui/tour.ts';
+import { isTourOpen, startTour, type TourStep } from './ui/tour.ts';
 import { TrackList, type FolderInfo } from './ui/trackList.ts';
 import { TransportBar } from './ui/transportBar.ts';
 
@@ -177,9 +177,9 @@ export class App {
                                              + 'Usa una versión reciente de Chrome, Edge, Firefox o Safari.') + '\n\n' + this.engine.initError);
     });
 
-    // La primera vez, el tutorial (cuando la página ya tiene su tamaño).
-    if (!isTourSeen())
-      requestAnimationFrame(() => requestAnimationFrame(() => this.showTour()));
+    // Al abrir la página (siempre empieza sin proyecto), el tutorial: cuando
+    // la página ya tiene su tamaño.
+    requestAnimationFrame(() => requestAnimationFrame(() => this.showTour()));
   }
 
   /** Cambió el idioma o el tema: se rehace lo que se construyó con el anterior. */

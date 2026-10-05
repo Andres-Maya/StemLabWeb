@@ -3,8 +3,8 @@
     iluminada la zona de la que se habla y pone al lado una tarjeta (con una
     flecha que la señala) que explica qué hace.
 
-    Aparece solo la primera vez que se abre StemLab Web y después desde
-    Ayuda > Tutorial. Siguiente: → o Intro. Atrás: ←. Salir: Esc.
+    Aparece cada vez que se abre StemLab Web (se cierra con "Saltar tutorial"
+    o Esc) y desde Ayuda > Tutorial. Siguiente: → o Intro. Atrás: ←. Salir: Esc.
 */
 import { getLanguage, languages, onLanguageChange, setLanguage, tr, type Localised } from '../core/i18n.ts';
 import { isDialogOpen } from './dialogs.ts';
@@ -20,16 +20,11 @@ export interface TourStep {
   settings?: boolean;
 }
 
-const seenKey = 'stemlab.tourSeen';
 const margin = 12;          // de la tarjeta a los bordes de la ventana
 const gap = 14;             // de la tarjeta a la zona iluminada
 const padding = 5;          // alrededor de la zona iluminada
 
 let active: Tour | null = null;
-
-export function isTourSeen(): boolean {
-  try { return localStorage.getItem(seenKey) === '1'; } catch { return true; }
-}
 
 export function isTourOpen(): boolean {
   return active !== null;
@@ -65,8 +60,6 @@ class Tour {
     document.removeEventListener('keydown', this.keys, true);
     window.removeEventListener('resize', this.reposition);
     this.stopListening();
-
-    try { localStorage.setItem(seenKey, '1'); } catch { /* sin almacenamiento */ }
 
     if (active === this)
       active = null;

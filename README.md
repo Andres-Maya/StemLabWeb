@@ -191,7 +191,7 @@ los navegadores basados en Chromium (Chrome, Edge); en el resto se usa la del si
    - Formatos: WAV de 24 bits (recomendado), 16 bits o 32 bits en coma flotante, y MP3 a 320, 192 o 128 kbps. Se guarda en la carpeta de descargas del navegador. **Cancelar** no deja nada a medias. Si el audio pasa de 0 dBFS se avisa del recorte (el WAV de 32 bits no recorta).
 9. **Archivo → Nuevo proyecto** descarta la sesión (antes ofrece descargar).
 10. **Ver → Tema** cambia entre el tema **oscuro** y el **claro**, y **Ver → Idioma** entre **español** e **inglés** (también con los botones de la esquina superior derecha). El cambio es inmediato, no toca la sesión y se recuerda en el navegador; la primera vez se usa el idioma del navegador.
-11. **Ayuda → Tutorial** recorre la aplicación parte por parte: ilumina cada zona y explica al lado qué hace (→ o Intro: siguiente; ←: atrás; Esc: salir). Se abre solo la primera vez que entras, y en su primer paso deja elegir idioma y tema.
+11. **Ayuda → Tutorial** recorre la aplicación parte por parte: ilumina cada zona y explica al lado qué hace (→ o Intro: siguiente; ←: atrás; Esc: salir). Se abre solo cada vez que entras en la página (**Saltar tutorial** o **Esc** lo cierran), y en su primer paso deja elegir idioma y tema.
 
 Para añadir un idioma: un diccionario como `src/core/lang/en.ts` (la clave es el texto en español del código) y su entrada en `languages` de `src/core/i18n.ts`. `npm test` avisa de los textos que falten.
 
